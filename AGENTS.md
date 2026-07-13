@@ -2,7 +2,7 @@
 
 - **Language**: TypeScript
 - **Package Manager**: pnpm
-- **Add-ons**: prettier, eslint, vitest, tailwindcss, sveltekit-adapter, drizzle, better-auth, mdsvex, storybook, mcp
+- **Add-ons**: prettier, eslint, tailwindcss, sveltekit-adapter, drizzle, better-auth, mdsvex, mcp
 
 ## AI / OpenRouter
 
