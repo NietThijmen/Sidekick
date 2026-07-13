@@ -5,6 +5,7 @@ import { alwaysAvailableTools } from './always-available';
 import { gitHubTools } from './github';
 import { jiraTools } from './jira';
 import { forgeTools } from './forge';
+import { context7Tools } from './context7';
 
 export async function getToolsForUser(userId: string) {
 	const linkedProviders = await db
@@ -19,8 +20,14 @@ export async function getToolsForUser(userId: string) {
 		columns: { id: true }
 	});
 
+	const context7Key = await db.query.apiKey.findFirst({
+		where: and(eq(apiKey.userId, userId), eq(apiKey.provider, 'context7')),
+		columns: { id: true }
+	});
+
 	return {
 		...alwaysAvailableTools,
+		...(context7Key ? context7Tools : {}),
 		...(providerIds.includes('github') ? gitHubTools : {}),
 		...(providerIds.includes('atlassian') ? jiraTools : {}),
 		...(forgeKey ? forgeTools : {})

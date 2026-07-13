@@ -12,7 +12,7 @@ import {
 	loadSkills,
 	loadSystemPrompt
 } from '$lib/server/ai';
-import { calculateCost } from '$lib/server/ai/models';
+import { calculateCost, listModels } from '$lib/server/ai/models';
 import { isStepCount, type ModelMessage } from 'ai';
 import { z } from 'zod';
 
@@ -72,7 +72,8 @@ export const load: PageServerLoad = async (event) => {
 		chats,
 		currentChat,
 		messages,
-		activeSkills
+		activeSkills,
+		models: listModels()
 	};
 };
 
@@ -145,7 +146,7 @@ export const actions: Actions = {
 			const MAX_STEPS = 20;
 			const tools = await getToolsForUser(userId);
 			const response = await generateText({
-				model: openrouter('openai/gpt-5.6-luna'),
+				model: openrouter(currentChat.model),
 				messages: chatMessages as ModelMessage[],
 				system: systemPrompt,
 				tools,
@@ -172,7 +173,7 @@ export const actions: Actions = {
 
 			const inputTokens = response.usage?.inputTokens ?? 0;
 			const outputTokens = response.usage?.outputTokens ?? 0;
-			const totalCost = calculateCost('openai/gpt-5.6-luna', inputTokens, outputTokens);
+			const totalCost = calculateCost(currentChat.model, inputTokens, outputTokens);
 
 			const usage = {
 				promptTokens: inputTokens,
@@ -255,5 +256,41 @@ export const actions: Actions = {
 		await db.delete(chat).where(eq(chat.id, chatId));
 
 		return redirect(302, '/');
+	},
+
+	setModel: async (event) => {
+		if (!event.locals.user) {
+			return redirect(302, '/login');
+		}
+
+		const formData = await event.request.formData();
+		const data = Object.fromEntries(formData);
+		const parsed = z
+			.object({
+				chatId: chatIdSchema,
+				model: z.string().min(1)
+			})
+			.safeParse(data);
+
+		if (!parsed.success) {
+			return fail(400, {
+				error: parsed.error.issues[0]?.message ?? 'Invalid model selection'
+			});
+		}
+
+		const { chatId, model } = parsed.data;
+		const userId = event.locals.user.id;
+
+		const currentChat = await db.query.chat.findFirst({
+			where: eq(chat.id, chatId)
+		});
+
+		if (!currentChat || currentChat.userId !== userId) {
+			return fail(403, { error: 'Chat not found' });
+		}
+
+		await db.update(chat).set({ model }).where(eq(chat.id, chatId));
+
+		return { success: true };
 	}
 };

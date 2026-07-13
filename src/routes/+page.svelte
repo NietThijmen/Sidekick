@@ -6,7 +6,8 @@
 	import { Input } from '$lib/components/ui/input';
 	import { Card, CardContent } from '$lib/components/ui/card';
 	import MarkdownRenderer from '$lib/components/MarkdownRenderer.svelte';
-	import { Loader2, LogOut, Send, User, Bot, Plus, Trash2, Menu, X, Wrench } from '@lucide/svelte';
+	import LabLogo from '$lib/components/LabLogo.svelte';
+	import { Loader2, LogOut, Send, User, Bot, Plus, Trash2, Menu, X, Wrench, ChevronDown } from '@lucide/svelte';
 	import { onMount, tick } from 'svelte';
 
 	let { data, form } = $props();
@@ -17,6 +18,35 @@
 	let messagesContainer: HTMLDivElement | undefined = $state();
 	let inputRef: HTMLInputElement | null = $state(null);
 	let chatToDelete: string | null = $state(null);
+	let showModelSelector = $state(false);
+	let modelSearch = $state('');
+	let searchRef: HTMLInputElement | null = $state(null);
+
+	let currentModelInfo = $derived(
+		data.models.find((m) => m.id === data.currentChat.model)
+	);
+
+	let filteredModels = $derived(
+		modelSearch
+			? data.models.filter((m) =>
+					m.name.toLowerCase().includes(modelSearch.toLowerCase())
+				)
+			: data.models
+	);
+
+	let filteredModelsByLab = $derived(
+		filteredModels.reduce(
+			(groups, model) => {
+				(groups[model.lab] ??= []).push(model);
+				return groups;
+			},
+			{} as Record<string, typeof data.models>
+		)
+	);
+
+	function getTierLabel(tier: number): string {
+		return '$'.repeat(tier);
+	}
 
 	function scrollToBottom() {
 		if (messagesContainer) {
@@ -53,6 +83,16 @@
 		await goto(resolve(`/?chat=${chatId}`), { replaceState: false });
 	}
 
+	async function changeModel(modelId: string) {
+		showModelSelector = false;
+		await fetch('?/setModel', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+			body: new URLSearchParams({ chatId: data.currentChat.id, model: modelId })
+		});
+		await invalidateAll();
+	}
+
 	onMount(() => {
 		scrollToBottom();
 		inputRef?.focus();
@@ -61,6 +101,13 @@
 	$effect(() => {
 		if (data.messages.length >= 0) {
 			tick().then(scrollToBottom);
+		}
+	});
+
+	$effect(() => {
+		if (showModelSelector) {
+			modelSearch = '';
+			tick().then(() => searchRef?.focus());
 		}
 	});
 </script>
@@ -85,8 +132,68 @@
 					<Menu class="size-5" />
 				{/if}
 			</Button>
-			<Bot class="size-6" />
+			<Bot class="size-6 hidden sm:block" />
 			<h1 class="text-lg font-semibold">AI Assistant</h1>
+			<div class="relative">
+				<button
+					type="button"
+					onclick={() => (showModelSelector = !showModelSelector)}
+					class="flex items-center gap-1 rounded-md border px-2 py-1 text-xs text-muted-foreground hover:bg-muted"
+				>
+					<span>{currentModelInfo?.name ?? data.currentChat.model}</span>
+					{#if currentModelInfo}
+						<span class="tabular-nums">{getTierLabel(currentModelInfo.tier)}</span>
+					{/if}
+					<ChevronDown class="size-3" />
+				</button>
+
+				{#if showModelSelector}
+					<div
+						class="absolute left-0 top-full z-50 mt-1 w-80 rounded-lg border bg-popover shadow-lg"
+					>
+						<div class="border-b p-2">
+							<input
+								bind:this={searchRef}
+								type="text"
+								placeholder="Search models..."
+								bind:value={modelSearch}
+								class="w-full rounded-md border border-input bg-background px-3 py-1.5 text-xs placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+								onclick={(e) => e.stopPropagation()}
+							/>
+						</div>
+						<div class="max-h-72 overflow-y-auto p-1">
+							{#each Object.entries(filteredModelsByLab) as [lab, labModels]}
+								<div class="px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+									{lab}
+								</div>
+								{#each labModels as model (model.id)}
+									<button
+										type="button"
+										onclick={() => changeModel(model.id)}
+										class="flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs transition-colors hover:bg-muted {model.id ===
+										data.currentChat.model
+											? 'bg-muted font-medium'
+											: ''}"
+									>
+										<span class="truncate">{model.name}</span>
+										<span class="shrink-0 tabular-nums text-muted-foreground">{getTierLabel(model.tier)}</span>
+									</button>
+								{/each}
+							{/each}
+							{#if Object.keys(filteredModelsByLab).length === 0}
+								<p class="px-3 py-4 text-center text-xs text-muted-foreground">No models match your search.</p>
+							{/if}
+						</div>
+					</div>
+
+					<button
+						type="button"
+						class="fixed inset-0 z-40 cursor-default"
+						onclick={() => (showModelSelector = false)}
+						aria-label="Close model selector"
+					></button>
+				{/if}
+			</div>
 		</div>
 		<div class="flex items-center gap-3">
 			<Button
@@ -244,7 +351,7 @@
 										{:else if message.role === 'user'}
 											<User class="size-4" />
 										{:else}
-											<Bot class="size-4" />
+											<LabLogo lab={currentModelInfo?.lab ?? ''} class="size-4" />
 										{/if}
 									</div>
 									<div class="min-w-0 space-y-1">
@@ -309,7 +416,7 @@
 								<div
 									class="flex size-8 shrink-0 items-center justify-center rounded-full bg-background text-foreground"
 								>
-									<Bot class="size-4" />
+									<LabLogo lab={currentModelInfo?.lab ?? ''} class="size-4" />
 								</div>
 								<Loader2 class="size-4 animate-spin" />
 								<span class="text-sm text-muted-foreground">Thinking... tools may be used</span>
