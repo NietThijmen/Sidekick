@@ -25,6 +25,6 @@ When the user needs to investigate an error, crash, or bug, use the sentry tools
 3. `sentryGetIssue` — Get full issue details including the latest event with stack trace. Use this to debug the root cause.
 
 Typical workflow:
-- First, list projects to find the right project slug
-- Then list issues to find the specific error
-- Finally get the full issue to see the stack trace
+- First, call `sentryListProjects` to find the project and get its numeric ID
+- Then call `sentryListIssues` with the project ID to find the specific error
+- Finally call `sentryGetIssue` with the issue ID to see the stack trace

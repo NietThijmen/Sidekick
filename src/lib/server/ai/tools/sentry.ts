@@ -47,15 +47,39 @@ async function sentryFetch(userId: string, path: string) {
 	return response.json();
 }
 
+async function sentryFetchWithOrg(userId: string, path: string) {
+	const config = await getSentryConfig(userId);
+	if (!config) {
+		return {
+			error:
+				'Sentry not configured. Add a Sentry API key in your profile settings, or set SENTRY_AUTH_TOKEN and SENTRY_ORG in your .env file.'
+		};
+	}
+
+	const response = await fetch(`${SENTRY_BASE}/organizations/${config.org}${path}`, {
+		headers: {
+			Authorization: `Bearer ${config.token}`,
+			Accept: 'application/json'
+		}
+	});
+
+	if (!response.ok) {
+		const text = await response.text();
+		return { error: `Sentry API error (${response.status}): ${text}` };
+	}
+
+	return response.json();
+}
+
 export const sentryTools = {
 	sentryListProjects: tool({
-		description: 'List all Sentry projects the auth token has access to',
+		description: 'List all Sentry projects the auth token has access to in the configured organization',
 		inputSchema: z.object({}).describe('No parameters needed'),
 		execute: async () => {
 			const event = getRequestEvent();
 			if (!event.locals.user) return { error: 'User not logged in' };
 
-			const data = await sentryFetch(event.locals.user.id, '/projects/');
+			const data = await sentryFetchWithOrg(event.locals.user.id, '/projects/');
 			if ('error' in data) return data;
 
 			if (!Array.isArray(data)) return { error: 'Unexpected response format' };
@@ -76,9 +100,9 @@ export const sentryTools = {
 
 	sentryListIssues: tool({
 		description:
-			'List issues for a Sentry project with optional filters. Returns issue summaries with count, level, and title.',
+			'List issues for a Sentry project by project ID with optional filters. Returns issue summaries with count, level, and title. Get the project ID from sentryListProjects first.',
 		inputSchema: z.object({
-			project: z.string().describe('The project slug (e.g. "my-project")'),
+			projectId: z.string().describe('The numeric project ID from sentryListProjects (e.g. "1")'),
 			query: z
 				.string()
 				.optional()
@@ -98,14 +122,14 @@ export const sentryTools = {
 				.describe('Sort order (default: date)')
 		}),
 		execute: async ({
-			project,
+			projectId,
 			query,
 			status,
 			statsPeriod,
 			limit,
 			sort
 		}: {
-			project: string;
+			projectId: string;
 			query?: string;
 			status?: string;
 			statsPeriod?: string;
@@ -124,7 +148,7 @@ export const sentryTools = {
 			}
 
 			const params = new URLSearchParams();
-			params.set('project', project);
+			params.set('project', projectId);
 			if (query) params.set('query', query);
 			if (status) params.set('status', status);
 			params.set('statsPeriod', statsPeriod ?? '14d');
@@ -153,7 +177,7 @@ export const sentryTools = {
 				isPublic: issue.isPublic,
 				permalink: issue.permalink,
 				shortId: issue.shortId,
-				project: issue.project?.slug ?? project,
+				project: issue.project?.slug ?? projectId,
 				culprit: issue.culprit,
 				type: issue.type ?? issue.metadata?.type ?? null,
 				value: issue.metadata?.value ?? null
