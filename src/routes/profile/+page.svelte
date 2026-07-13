@@ -12,7 +12,7 @@
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
 	import { Separator } from '$lib/components/ui/separator';
-	import { ArrowLeft, Calendar, KeyRound, Loader2, LogOut, Pencil, Shield } from '@lucide/svelte';
+	import { ArrowLeft, Bot, Calendar, KeyRound, Loader2, LogOut, Pencil, Shield } from '@lucide/svelte';
 
 	interface ProfileFormData {
 		error?: string;
@@ -101,12 +101,16 @@
 	<header class="border-b">
 		<div class="mx-auto flex max-w-3xl items-center justify-between px-4 py-3">
 			<div class="flex items-center gap-2">
-				<Button variant="ghost" size="icon-sm" href={resolve('/')} aria-label="Back to home">
+				<Button variant="ghost" size="icon-sm" href={resolve('/chat')} aria-label="Back to home">
 					<ArrowLeft class="size-4" />
 				</Button>
 				<h1 class="text-lg font-semibold">Profile</h1>
 			</div>
 			<div class="flex items-center gap-2">
+				<Button variant="ghost" size="sm" href={resolve('/profile/agents')} class="gap-2">
+					<Bot class="size-4" />
+					<span class="hidden sm:inline">Agents</span>
+				</Button>
 				<Button variant="ghost" size="sm" href={resolve('/profile/api-keys')} class="gap-2">
 					<KeyRound class="size-4" />
 					<span class="hidden sm:inline">API Keys</span>

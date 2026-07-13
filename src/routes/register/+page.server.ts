@@ -11,7 +11,7 @@ const registerSchema = z.object({
 
 export const load: PageServerLoad = (event) => {
 	if (event.locals.user) {
-		return redirect(302, '/');
+		return redirect(302, '/chat');
 	}
 	return {};
 };
@@ -51,12 +51,12 @@ export const actions: Actions = {
 			});
 		}
 
-		return redirect(302, '/');
+		return redirect(302, '/chat');
 	},
 	signInSocial: async (event) => {
 		const formData = await event.request.formData();
 		const provider = formData.get('provider')?.toString() ?? 'github';
-		const callbackURL = formData.get('callbackURL')?.toString() ?? '/';
+		const callbackURL = formData.get('callbackURL')?.toString() ?? '/chat';
 
 		const result = await auth.api.signInSocial({
 			body: {
