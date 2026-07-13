@@ -10,6 +10,7 @@
 - Shared server library: `src/lib/server/ai/index.ts`.
 - Configure with the `OPENROUTER_API_KEY` environment variable.
 - Atlassian OAuth is configured in `src/lib/server/auth.ts` using `ATLASSIAN_CLIENT_ID` and `ATLASSIAN_CLIENT_SECRET`.
+- Jira API tools use the Atlassian access token to call the Jira REST API. The cloud ID is auto-detected or can be set via `ATLASSIAN_CLOUD_ID`.
 - Import helpers and the configured provider from `$lib/server/ai`:
 
   ```ts

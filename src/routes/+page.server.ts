@@ -12,6 +12,7 @@ import {
 	loadSkills,
 	loadSystemPrompt
 } from '$lib/server/ai';
+import { calculateCost } from '$lib/server/ai/models';
 import { isStepCount, type ModelMessage } from 'ai';
 import { z } from 'zod';
 
@@ -141,7 +142,7 @@ export const actions: Actions = {
 		}> = [];
 
 		try {
-			const MAX_STEPS = 3;
+			const MAX_STEPS = 20;
 			const tools = await getToolsForUser(userId);
 			const response = await generateText({
 				model: openrouter('openai/gpt-5.6-luna'),
@@ -169,11 +170,23 @@ export const actions: Actions = {
 				}
 			}
 
+			const inputTokens = response.usage?.inputTokens ?? 0;
+			const outputTokens = response.usage?.outputTokens ?? 0;
+			const totalCost = calculateCost('openai/gpt-5.6-luna', inputTokens, outputTokens);
+
+			const usage = {
+				promptTokens: inputTokens,
+				completionTokens: outputTokens,
+				totalTokens: response.usage?.totalTokens ?? 0,
+				totalCost
+			};
+
 			await db.insert(message).values({
 				chatId,
 				role: 'assistant',
 				content: text,
-				toolCalls: storedToolCalls.length > 0 ? storedToolCalls : undefined
+				toolCalls: storedToolCalls.length > 0 ? storedToolCalls : undefined,
+				usage
 			});
 		} catch (error) {
 			const message_text = error instanceof Error ? error.message : 'Failed to generate response';

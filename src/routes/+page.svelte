@@ -260,17 +260,24 @@
 												minute: '2-digit'
 											})}
 										</span>
-										{#if message.role === 'assistant' && message.toolCalls && message.toolCalls.length > 0}
+										{#if message.role === 'assistant' && (message.toolCalls?.length || message.usage)}
 											<details class="pt-2">
 												<summary
 													class="flex cursor-pointer list-none items-center gap-1 text-xs font-medium opacity-80"
 												>
 													<Wrench class="size-3" />
-													<span
-														>{message.toolCalls.length} tool call{message.toolCalls.length === 1
-															? ''
-															: 's'}</span
-													>
+													{#if message.toolCalls?.length}
+														<span
+															>{message.toolCalls.length} tool call{message.toolCalls.length === 1
+																? ''
+																: 's'}</span
+														>
+													{/if}
+													{#if message.usage?.totalCost}
+														<span class="ml-auto text-[10px] opacity-60"
+															>${message.usage.totalCost.toFixed(5)}</span
+														>
+													{/if}
 												</summary>
 												<div class="mt-2 space-y-2">
 													{#each message.toolCalls as toolCall (toolCall.id)}

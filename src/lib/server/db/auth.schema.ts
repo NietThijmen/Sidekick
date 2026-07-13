@@ -73,6 +73,29 @@ export const account = sqliteTable(
 	(table) => [index('account_userId_idx').on(table.userId)]
 );
 
+export const apiKey = sqliteTable(
+	'api_key',
+	{
+		id: text('id')
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		userId: text('user_id')
+			.notNull()
+			.references(() => user.id, { onDelete: 'cascade' }),
+		name: text('name').notNull(),
+		provider: text('provider').notNull(),
+		token: text('token').notNull(),
+		createdAt: integer('created_at', { mode: 'timestamp_ms' })
+			.default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+			.notNull(),
+		updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
+			.default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+			.$onUpdate(() => /* @__PURE__ */ new Date())
+			.notNull()
+	},
+	(table) => [index('api_key_userId_idx').on(table.userId)]
+);
+
 export const verification = sqliteTable(
 	'verification',
 	{
@@ -93,7 +116,8 @@ export const verification = sqliteTable(
 
 export const userRelations = relations(user, ({ many }) => ({
 	sessions: many(session),
-	accounts: many(account)
+	accounts: many(account),
+	apiKeys: many(apiKey)
 }));
 
 export const sessionRelations = relations(session, ({ one }) => ({
@@ -106,6 +130,13 @@ export const sessionRelations = relations(session, ({ one }) => ({
 export const accountRelations = relations(account, ({ one }) => ({
 	user: one(user, {
 		fields: [account.userId],
+		references: [user.id]
+	})
+}));
+
+export const apiKeyRelations = relations(apiKey, ({ one }) => ({
+	user: one(user, {
+		fields: [apiKey.userId],
 		references: [user.id]
 	})
 }));
