@@ -126,6 +126,11 @@
 		});
 		if (res.redirected) {
 			window.location.href = res.url;
+			return;
+		}
+		const result = await res.json();
+		if (result?.type === 'redirect' && result?.location) {
+			await goto(result.location);
 		}
 	}
 
