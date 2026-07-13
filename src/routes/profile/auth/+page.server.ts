@@ -1,6 +1,6 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import { auth } from '$lib/server/auth';
+import { auth, atlassianConfigured } from '$lib/server/auth';
 import { db } from '$lib/server/db';
 import { account } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
@@ -77,6 +77,7 @@ export const load: PageServerLoad = async (event) => {
 			atlassian: connectedProviders.has('atlassian'),
 			hasPassword
 		},
+		atlassianConfigured,
 		oauthError: oauthError ? (oauthErrorDescription ?? oauthError) : undefined
 	};
 };

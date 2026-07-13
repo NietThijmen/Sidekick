@@ -32,6 +32,7 @@
 				atlassian: boolean;
 				hasPassword: boolean;
 			};
+			atlassianConfigured: boolean;
 		};
 		form: AuthFormData;
 	} = $props();
@@ -363,75 +364,77 @@
 						{/if}
 					</div>
 
-					<Separator />
+					{#if data.atlassianConfigured}
+						<Separator />
 
-					<div class="flex items-center justify-between gap-4">
-						<div class="flex items-center gap-3">
-							<svg class="size-6" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-								<path
-									d="M19.75 7.4c-.04-.06-.1-.1-.17-.1s-.13.04-.17.1l-2.8 4.47c-.04.06-.04.14 0 .2l2.8 4.47c.04.06.1.1.17.1s.13-.04.17-.1l2.8-4.47c.04-.06.04-.14 0-.2l-2.8-4.47zM12.25 2.6c-.04-.06-.1-.1-.17-.1s-.13.04-.17.1L9.11 7.07c-.04.06-.04.14 0 .2l2.8 4.47c.04.06.1.1.17.1s.13-.04.17-.1l2.8-4.47c.04-.06.04-.14 0-.2L12.25 2.6zM4.75 7.4c-.04-.06-.1-.1-.17-.1s-.13.04-.17.1l-2.8 4.47c-.04.06-.04.14 0 .2l2.8 4.47c.04.06.1.1.17.1s.13-.04.17-.1l2.8-4.47c.04-.06.04-.14 0-.2L4.75 7.4zM12.25 11.07c-.04-.06-.1-.1-.17-.1s-.13.04-.17.1l-2.8 4.47c-.04.06-.04.14 0 .2l2.8 4.47c.04.06.1.1.17.1s.13-.04.17-.1l2.8-4.47c.04-.06.04-.14 0-.2l-2.8-4.47z"
-								/>
-							</svg>
-							<div>
-								<p class="font-medium">Atlassian</p>
-								<p class="text-sm text-muted-foreground">
-									{data.accounts.atlassian ? 'Connected' : 'Not connected'}
-								</p>
+						<div class="flex items-center justify-between gap-4">
+							<div class="flex items-center gap-3">
+								<svg class="size-6" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+									<path
+										d="M19.75 7.4c-.04-.06-.1-.1-.17-.1s-.13.04-.17.1l-2.8 4.47c-.04.06-.04.14 0 .2l2.8 4.47c.04.06.1.1.17.1s.13-.04.17-.1l2.8-4.47c.04-.06.04-.14 0-.2l-2.8-4.47zM12.25 2.6c-.04-.06-.1-.1-.17-.1s-.13.04-.17.1L9.11 7.07c-.04.06-.04.14 0 .2l2.8 4.47c.04.06.1.1.17.1s.13-.04.17-.1l2.8-4.47c.04-.06.04-.14 0-.2L12.25 2.6zM4.75 7.4c-.04-.06-.1-.1-.17-.1s-.13.04-.17.1l-2.8 4.47c-.04.06-.04.14 0 .2l2.8 4.47c.04.06.1.1.17.1s.13-.04.17-.1l2.8-4.47c.04-.06.04-.14 0-.2L4.75 7.4zM12.25 11.07c-.04-.06-.1-.1-.17-.1s-.13.04-.17.1l-2.8 4.47c-.04.06-.04.14 0 .2l2.8 4.47c.04.06.1.1.17.1s.13-.04.17-.1l2.8-4.47c.04-.06.04-.14 0-.2l-2.8-4.47z"
+									/>
+								</svg>
+								<div>
+									<p class="font-medium">Atlassian</p>
+									<p class="text-sm text-muted-foreground">
+										{data.accounts.atlassian ? 'Connected' : 'Not connected'}
+									</p>
+								</div>
 							</div>
+							{#if data.accounts.atlassian}
+								<form
+									method="post"
+									action="?/unlinkSocial"
+									use:enhance={() => {
+										isUnlinkLoading = 'atlassian';
+										return async ({ update }) => {
+											await update();
+											isUnlinkLoading = null;
+										};
+									}}
+								>
+									<input type="hidden" name="provider" value="atlassian" />
+									<Button
+										type="submit"
+										variant="outline"
+										size="sm"
+										disabled={isUnlinkLoading === 'atlassian'}
+									>
+										{#if isUnlinkLoading === 'atlassian'}
+											<Loader2 class="mr-2 size-4 animate-spin" />
+										{/if}
+										Disconnect
+									</Button>
+								</form>
+							{:else}
+								<form
+									method="post"
+									action="?/linkSocial"
+									use:enhance={() => {
+										isLinkLoading = 'atlassian';
+										return async ({ update }) => {
+											await update();
+											isLinkLoading = null;
+										};
+									}}
+								>
+									<input type="hidden" name="provider" value="atlassian" />
+									<input type="hidden" name="callbackURL" value="/profile/auth" />
+									<Button
+										type="submit"
+										variant="outline"
+										size="sm"
+										disabled={isLinkLoading === 'atlassian'}
+									>
+										{#if isLinkLoading === 'atlassian'}
+											<Loader2 class="mr-2 size-4 animate-spin" />
+										{/if}
+										Connect
+									</Button>
+								</form>
+							{/if}
 						</div>
-						{#if data.accounts.atlassian}
-							<form
-								method="post"
-								action="?/unlinkSocial"
-								use:enhance={() => {
-									isUnlinkLoading = 'atlassian';
-									return async ({ update }) => {
-										await update();
-										isUnlinkLoading = null;
-									};
-								}}
-							>
-								<input type="hidden" name="provider" value="atlassian" />
-								<Button
-									type="submit"
-									variant="outline"
-									size="sm"
-									disabled={isUnlinkLoading === 'atlassian'}
-								>
-									{#if isUnlinkLoading === 'atlassian'}
-										<Loader2 class="mr-2 size-4 animate-spin" />
-									{/if}
-									Disconnect
-								</Button>
-							</form>
-						{:else}
-							<form
-								method="post"
-								action="?/linkSocial"
-								use:enhance={() => {
-									isLinkLoading = 'atlassian';
-									return async ({ update }) => {
-										await update();
-										isLinkLoading = null;
-									};
-								}}
-							>
-								<input type="hidden" name="provider" value="atlassian" />
-								<input type="hidden" name="callbackURL" value="/profile/auth" />
-								<Button
-									type="submit"
-									variant="outline"
-									size="sm"
-									disabled={isLinkLoading === 'atlassian'}
-								>
-									{#if isLinkLoading === 'atlassian'}
-										<Loader2 class="mr-2 size-4 animate-spin" />
-									{/if}
-									Connect
-								</Button>
-							</form>
-						{/if}
-					</div>
+					{/if}
 				</CardContent>
 			</Card>
 		</div>

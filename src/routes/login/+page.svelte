@@ -20,7 +20,13 @@
 		email?: string;
 	}
 
-	let { form }: { form: AuthFormData } = $props();
+	let {
+		data,
+		form
+	}: {
+		data: { atlassianConfigured: boolean };
+		form: AuthFormData;
+	} = $props();
 	let isLoading = $state(false);
 	let isSocialLoading = $state(false);
 </script>
@@ -33,7 +39,10 @@
 	<Card class="w-full max-w-sm">
 		<CardHeader class="text-center">
 			<CardTitle class="text-xl">Welcome back</CardTitle>
-			<CardDescription>Login with your email or GitHub account</CardDescription>
+			<CardDescription
+				>Login with your email{data.atlassianConfigured ? ', GitHub or Atlassian' : ' or GitHub'}{' '}
+				account</CardDescription
+			>
 		</CardHeader>
 		<CardContent class="grid gap-4">
 			{#if form?.error}
@@ -73,6 +82,40 @@
 					Continue with GitHub
 				</Button>
 			</form>
+
+			{#if data.atlassianConfigured}
+				<form
+					method="post"
+					action="?/signInSocial"
+					use:enhance={() => {
+						isSocialLoading = true;
+						return async ({ update }) => {
+							await update();
+							isSocialLoading = false;
+						};
+					}}
+				>
+					<input type="hidden" name="provider" value="atlassian" />
+					<input type="hidden" name="callbackURL" value="/" />
+					<Button
+						type="submit"
+						variant="outline"
+						class="w-full"
+						disabled={isSocialLoading || isLoading}
+					>
+						{#if isSocialLoading}
+							<Loader2 class="mr-2 size-4 animate-spin" />
+						{:else}
+							<svg class="mr-2 size-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+								<path
+									d="M19.75 7.4c-.04-.06-.1-.1-.17-.1s-.13.04-.17.1l-2.8 4.47c-.04.06-.04.14 0 .2l2.8 4.47c.04.06.1.1.17.1s.13-.04.17-.1l2.8-4.47c.04-.06.04-.14 0-.2l-2.8-4.47zM12.25 2.6c-.04-.06-.1-.1-.17-.1s-.13.04-.17.1L9.11 7.07c-.04.06-.04.14 0 .2l2.8 4.47c.04.06.1.1.17.1s.13-.04.17-.1l2.8-4.47c.04-.06.04-.14 0-.2L12.25 2.6zM4.75 7.4c-.04-.06-.1-.1-.17-.1s-.13.04-.17.1l-2.8 4.47c-.04.06-.04.14 0 .2l2.8 4.47c.04.06.1.1.17.1s.13-.04.17-.1l2.8-4.47c.04-.06.04-.14 0-.2L4.75 7.4zM12.25 11.07c-.04-.06-.1-.1-.17-.1s-.13.04-.17.1l-2.8 4.47c-.04.06-.04.14 0 .2l2.8 4.47c.04.06.1.1.17.1s.13-.04.17-.1l2.8-4.47c.04-.06.04-.14 0-.2l-2.8-4.47z"
+								/>
+							</svg>
+						{/if}
+						Continue with Atlassian
+					</Button>
+				</form>
+			{/if}
 
 			<div class="relative">
 				<div class="absolute inset-0 flex items-center">

@@ -5,6 +5,11 @@ import { sveltekitCookies } from 'better-auth/svelte-kit';
 import { getRequestEvent } from '$app/server';
 import { db } from '$lib/server/db';
 
+export const atlassianConfigured = !!(env.ATLASSIAN_CLIENT_ID && env.ATLASSIAN_CLIENT_SECRET);
+
+const trustedProviders: string[] = ['github'];
+if (atlassianConfigured) trustedProviders.push('atlassian');
+
 export const auth = betterAuth({
 	baseURL: env.ORIGIN,
 	secret: env.BETTER_AUTH_SECRET,
@@ -12,7 +17,7 @@ export const auth = betterAuth({
 	emailAndPassword: { enabled: true },
 	account: {
 		accountLinking: {
-			trustedProviders: ['github', 'atlassian'],
+			trustedProviders: trustedProviders,
 			allowDifferentEmails: true
 		}
 	},
@@ -43,11 +48,13 @@ export const auth = betterAuth({
 			clientSecret: env.GITHUB_CLIENT_SECRET,
 			scope: ['read:user', 'user:email', 'repo']
 		},
-		atlassian: {
-			clientId: env.ATLASSIAN_CLIENT_ID,
-			clientSecret: env.ATLASSIAN_CLIENT_SECRET,
-			scope: ['read:jira-work', 'read:jira-user', 'write:jira-work', 'read:me', 'read:account']
-		}
+		...(atlassianConfigured && {
+			atlassian: {
+				clientId: env.ATLASSIAN_CLIENT_ID,
+				clientSecret: env.ATLASSIAN_CLIENT_SECRET,
+				scope: ['read:jira-work', 'read:jira-user', 'write:jira-work', 'read:me', 'read:account']
+			}
+		})
 	},
 	plugins: [
 		sveltekitCookies(getRequestEvent) // make sure this is the last plugin in the array

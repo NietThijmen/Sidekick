@@ -1,6 +1,6 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import { auth } from '$lib/server/auth';
+import { auth, atlassianConfigured } from '$lib/server/auth';
 import { z } from 'zod';
 
 const loginSchema = z.object({
@@ -12,7 +12,7 @@ export const load: PageServerLoad = (event) => {
 	if (event.locals.user) {
 		return redirect(302, '/chat');
 	}
-	return {};
+	return { atlassianConfigured };
 };
 
 export const actions: Actions = {
@@ -56,7 +56,7 @@ export const actions: Actions = {
 
 		const result = await auth.api.signInSocial({
 			body: {
-				provider: provider as 'github',
+				provider: provider as 'github' | 'atlassian',
 				callbackURL
 			}
 		});
