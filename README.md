@@ -8,6 +8,8 @@ A personal AI assistant powered by OpenRouter, built with SvelteKit. Chat with L
 - **GitHub integration** — browse repos, issues, PRs, and user commits
 - **Jira integration** — search issues, view projects, query with JQL
 - **Laravel Forge integration** — manage servers, sites, and deployments
+- **Firecrawl integration** — scrape web pages and search with full page content
+- **Sentry integration** — look up errors, stack traces, and production issues
 - **Skill system** — extensible prompt injections triggered by keywords
 - **Chat history** — persistent conversations with sidebar navigation
 - **Profile & auth** — GitHub/Atlassian OAuth linking, API key management
@@ -38,6 +40,10 @@ pnpm dev
 | `GITHUB_CLIENT_SECRET` | GitHub OAuth client secret (for login) |
 | `BETTER_AUTH_URL` | Base URL for auth redirects (defaults to `localhost:5173`) |
 | `BETTER_AUTH_SECRET` | Secret for auth session encryption |
+| `CONTEXT7_API_KEY` | Context7 SDK key for live documentation lookups |
+| `FIRECRAWL_API_KEY` | Firecrawl API key for web scraping and search |
+| `SENTRY_AUTH_TOKEN` | Sentry auth token for error lookup tools |
+| `SENTRY_ORG` | Sentry organization slug (required alongside `SENTRY_AUTH_TOKEN`) |
 
 ## Database
 
