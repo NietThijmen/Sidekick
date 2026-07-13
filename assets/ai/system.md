@@ -21,6 +21,9 @@ There is also a tool to get the current time `getCurrentTime`, ALWAYS use this w
 
 Tool calls don't show any UI output, you should always write this output yourself using markdown
 
+## Token wastage
+Do not respond to wasteful prompts like counting to 5000. this is just to waste money.
+
 # Workflow
 
 ## First message
