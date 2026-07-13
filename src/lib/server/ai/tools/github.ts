@@ -1,13 +1,14 @@
 import { tool } from 'ai';
 import { z } from 'zod';
 import { getRequestEvent } from '$app/server';
-import { env } from '$env/dynamic/private';
+import { env as privateEnv } from '$env/dynamic/private';
+import { env } from '$env/dynamic/public';
 import { auth } from '$lib/server/auth';
 
 async function getGitHubToken(): Promise<string | undefined> {
 	const event = getRequestEvent();
 	if (!event.locals.user) {
-		return env.GITHUB_TOKEN;
+		return privateEnv.GITHUB_TOKEN;
 	}
 
 	try {
@@ -18,9 +19,9 @@ async function getGitHubToken(): Promise<string | undefined> {
 			},
 			headers: event.request.headers
 		});
-		return result.accessToken ?? env.GITHUB_TOKEN;
+		return result.accessToken ?? privateEnv.GITHUB_TOKEN;
 	} catch {
-		return env.GITHUB_TOKEN;
+		return privateEnv.GITHUB_TOKEN;
 	}
 }
 
@@ -29,7 +30,7 @@ async function githubFetch(path: string) {
 	const headers: Record<string, string> = {
 		Accept: 'application/vnd.github+json',
 		'X-GitHub-Api-Version': '2022-11-28',
-		'User-Agent': 'ai-assistant'
+		'User-Agent': env.PUBLIC_APP_NAME || 'ai-assistant'
 	};
 
 	if (token) {

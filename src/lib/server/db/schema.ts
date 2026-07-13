@@ -10,6 +10,30 @@ export const task = sqliteTable('task', {
 	priority: integer('priority').notNull().default(1)
 });
 
+export const agent = sqliteTable(
+	'agent',
+	{
+		id: text('id')
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		userId: text('user_id')
+			.notNull()
+			.references(() => user.id, { onDelete: 'cascade' }),
+		name: text('name').notNull(),
+		description: text('description'),
+		systemPrompt: text('system_prompt').notNull().default(''),
+		model: text('model').notNull().default('openai/gpt-5.6-luna'),
+		createdAt: integer('created_at', { mode: 'timestamp_ms' })
+			.default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+			.notNull(),
+		updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
+			.default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+			.$onUpdate(() => /* @__PURE__ */ new Date())
+			.notNull()
+	},
+	(table) => [index('agent_userId_idx').on(table.userId)]
+);
+
 export const chat = sqliteTable(
 	'chat',
 	{
@@ -21,6 +45,7 @@ export const chat = sqliteTable(
 			.references(() => user.id, { onDelete: 'cascade' }),
 		title: text('title').notNull().default('New chat'),
 		model: text('model').notNull().default('openai/gpt-5.6-luna'),
+		agentId: text('agent_id').references(() => agent.id, { onDelete: 'set null' }),
 		createdAt: integer('created_at', { mode: 'timestamp_ms' })
 			.default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
 			.notNull(),
@@ -65,12 +90,24 @@ export const message = sqliteTable(
 	(table) => [index('message_chatId_idx').on(table.chatId)]
 );
 
+export const agentRelations = relations(agent, ({ one, many }) => ({
+	user: one(user, {
+		fields: [agent.userId],
+		references: [user.id]
+	}),
+	chats: many(chat)
+}));
+
 export const chatRelations = relations(chat, ({ one, many }) => ({
 	user: one(user, {
 		fields: [chat.userId],
 		references: [user.id]
 	}),
-	messages: many(message)
+	messages: many(message),
+	agent: one(agent, {
+		fields: [chat.agentId],
+		references: [agent.id]
+	})
 }));
 
 export const messageRelations = relations(message, ({ one }) => ({

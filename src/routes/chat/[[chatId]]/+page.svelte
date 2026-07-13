@@ -147,7 +147,7 @@
 </script>
 
 <svelte:head>
-	<title>AI Assistant</title>
+	<title>Sidekick</title>
 </svelte:head>
 
 <div class="flex h-screen flex-col bg-background">

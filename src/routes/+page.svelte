@@ -8,5 +8,5 @@
 </script>
 
 <svelte:head>
-	<title>AI Assistant</title>
+	<title>Sidekick</title>
 </svelte:head>

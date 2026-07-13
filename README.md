@@ -1,4 +1,4 @@
-# AI Assistant
+# Sidekick
 
 A personal AI assistant powered by OpenRouter, built with SvelteKit. Chat with LLMs and let the AI interact with your connected services — GitHub, Jira, Laravel Forge, and more.
 
