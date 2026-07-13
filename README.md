@@ -5,6 +5,7 @@ A personal AI assistant powered by OpenRouter, built with SvelteKit. Chat with L
 ## Features
 
 - **Multi-model chat** — powered by OpenRouter with access to hundreds of models (GPT, Claude, Gemini, etc.)
+- **Custom agents** — create reusable assistants with their own system prompts, model, and behavior. Attach any agent to any conversation.
 - **GitHub integration** — browse repos, issues, PRs, and user commits
 - **Jira integration** — search issues, view projects, query with JQL
 - **Laravel Forge integration** — manage servers, sites, and deployments
@@ -13,6 +14,12 @@ A personal AI assistant powered by OpenRouter, built with SvelteKit. Chat with L
 - **Skill system** — extensible prompt injections triggered by keywords
 - **Chat history** — persistent conversations with sidebar navigation
 - **Profile & auth** — GitHub/Atlassian OAuth linking, API key management
+
+## Screenshots
+
+| Login | Chat |
+|---|---|
+| ![Login](.docs/assets/login.png) | ![Chat](.docs/assets/chat.png) |
 
 ## Getting started
 
