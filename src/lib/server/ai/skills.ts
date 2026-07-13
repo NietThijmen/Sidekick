@@ -90,18 +90,23 @@ export function loadSkills(): Skill[] {
 }
 
 export function findActiveSkills(message: string, skills: Skill[]): Skill[] {
+	if (!message) {
+		return [];
+	}
 	const lowerMessage = message.toLowerCase();
 	return skills.filter((skill) =>
-		skill.triggers.some((trigger) => lowerMessage.includes(trigger.toLowerCase()))
+		skill.triggers
+			.filter((trigger): trigger is string => typeof trigger === 'string')
+			.some((trigger) => lowerMessage.includes(trigger.toLowerCase()))
 	);
 }
 
-export function buildSystemPrompt(basePrompt: string, activeSkills: Skill[]): string {
-	if (activeSkills.length === 0) {
+export function buildSystemPrompt(basePrompt: string, skills: Skill[]): string {
+	if (skills.length === 0) {
 		return basePrompt;
 	}
 
-	const skillSections = activeSkills
+	const skillSections = skills
 		.map((skill) => `## Skill: ${skill.name}\n\n${skill.content}`)
 		.join('\n\n');
 

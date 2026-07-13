@@ -5,7 +5,8 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import { Card, CardContent } from '$lib/components/ui/card';
-	import { Loader2, LogOut, Send, User, Bot, Plus, Trash2, Menu, X } from '@lucide/svelte';
+	import MarkdownRenderer from '$lib/components/MarkdownRenderer.svelte';
+	import { Loader2, LogOut, Send, User, Bot, Plus, Trash2, Menu, X, Wrench } from '@lucide/svelte';
 	import { onMount, tick } from 'svelte';
 
 	let { data, form } = $props();
@@ -88,14 +89,19 @@
 			<h1 class="text-lg font-semibold">AI Assistant</h1>
 		</div>
 		<div class="flex items-center gap-3">
-			<div class="flex items-center gap-2 text-sm text-muted-foreground">
+			<Button
+				variant="ghost"
+				size="sm"
+				href={resolve('/profile')}
+				class="flex items-center gap-2 px-2 text-sm text-muted-foreground hover:text-foreground"
+			>
 				<div
 					class="flex size-8 items-center justify-center rounded-full bg-primary text-xs font-medium text-primary-foreground"
 				>
 					{getInitials(data.user.name)}
 				</div>
 				<span class="hidden sm:inline">{data.user.name}</span>
-			</div>
+			</Button>
 			<Button variant="ghost" size="icon" onclick={handleLogout} aria-label="Log out">
 				<LogOut class="size-4" />
 			</Button>
@@ -236,13 +242,45 @@
 										{/if}
 									</div>
 									<div class="min-w-0 space-y-1">
-										<p class="whitespace-pre-wrap text-sm leading-relaxed">{message.content}</p>
+										<MarkdownRenderer
+											content={message.content}
+											class={message.role === 'user' ? 'text-primary-foreground' : 'text-foreground'}
+										/>
 										<span class="text-xs opacity-70">
 											{new Date(message.createdAt).toLocaleTimeString([], {
 												hour: '2-digit',
 												minute: '2-digit'
 											})}
 										</span>
+										{#if message.role === 'assistant' && message.toolCalls && message.toolCalls.length > 0}
+											<details class="pt-2">
+												<summary
+													class="flex cursor-pointer list-none items-center gap-1 text-xs font-medium opacity-80"
+												>
+													<Wrench class="size-3" />
+													<span
+														>{message.toolCalls.length} tool call{message.toolCalls.length === 1
+															? ''
+															: 's'}</span
+													>
+												</summary>
+												<div class="mt-2 space-y-2">
+													{#each message.toolCalls as toolCall (toolCall.id)}
+														<div class="rounded-lg border bg-background/50 p-2 text-xs">
+															<p class="font-semibold">{toolCall.toolName}</p>
+															<p class="mt-1 text-muted-foreground">
+																args: {JSON.stringify(toolCall.args)}
+															</p>
+															{#if toolCall.result}
+																<p class="mt-1 text-muted-foreground">
+																	result: {JSON.stringify(toolCall.result)}
+																</p>
+															{/if}
+														</div>
+													{/each}
+												</div>
+											</details>
+										{/if}
 									</div>
 								</CardContent>
 							</Card>
@@ -259,7 +297,7 @@
 									<Bot class="size-4" />
 								</div>
 								<Loader2 class="size-4 animate-spin" />
-								<span class="text-sm text-muted-foreground">Thinking...</span>
+								<span class="text-sm text-muted-foreground">Thinking... tools may be used</span>
 							</CardContent>
 						</Card>
 					</div>
@@ -267,6 +305,19 @@
 			</div>
 
 			<div class="border-t p-4">
+				{#if data.activeSkills.length > 0}
+					<div class="mb-2 flex flex-wrap items-center gap-2">
+						<span class="text-xs text-muted-foreground">Skills active:</span>
+						{#each data.activeSkills as skill (skill.id)}
+							<span
+								class="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary"
+							>
+								{skill.name}
+							</span>
+						{/each}
+					</div>
+				{/if}
+
 				<form
 					method="post"
 					action="?/sendMessage"

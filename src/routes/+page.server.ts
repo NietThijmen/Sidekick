@@ -12,6 +12,7 @@ import {
 	loadSkills,
 	loadSystemPrompt
 } from '$lib/server/ai';
+import { isStepCount, type ModelMessage } from 'ai';
 import { z } from 'zod';
 
 const chatIdSchema = z.string().uuid('Invalid chat ID');
@@ -61,11 +62,16 @@ export const load: PageServerLoad = async (event) => {
 		orderBy: [message.createdAt]
 	});
 
+	const lastUserMessage = [...messages].reverse().find((m) => m.role === 'user');
+	const allSkills = loadSkills();
+	const activeSkills = lastUserMessage ? findActiveSkills(lastUserMessage.content, allSkills) : [];
+
 	return {
 		user: event.locals.user,
 		chats,
 		currentChat,
-		messages
+		messages,
+		activeSkills
 	};
 };
 
@@ -114,35 +120,48 @@ export const actions: Actions = {
 			orderBy: [message.createdAt]
 		});
 
-		const chatMessages = previousMessages.map((m) => ({
-			role: m.role as 'user' | 'assistant' | 'system',
-			content: m.content
-		}));
+		const chatMessages = previousMessages
+			.filter((m) => m.role !== 'system')
+			.map((m) => ({
+				role: m.role as 'user' | 'assistant',
+				content: m.content
+			}));
 
 		const baseSystemPrompt = loadSystemPrompt();
 		const skills = loadSkills();
 		const activeSkills = findActiveSkills(content, skills);
 		const systemPrompt = buildSystemPrompt(baseSystemPrompt, activeSkills);
 
+		const storedToolCalls: Array<{
+			id: string;
+			type: 'tool-call';
+			toolName: string;
+			args: Record<string, unknown>;
+			result: unknown;
+		}> = [];
+
 		try {
-			const { text, toolCalls, toolResults } = await generateText({
-				model: openrouter('openai/gpt-4o-mini'),
-				messages: chatMessages,
+			const MAX_STEPS = 3;
+			const response = await generateText({
+				model: openrouter('openai/gpt-5.6-luna'),
+				messages: chatMessages as ModelMessage[],
 				system: systemPrompt,
 				tools: aiTools,
-				maxSteps: 5
+				stopWhen: isStepCount(MAX_STEPS)
 			});
 
-			const storedToolCalls = toolCalls.map((call) => {
-				const result = toolResults.find((r) => r.toolCallId === call.toolCallId);
-				return {
-					id: call.toolCallId,
-					type: 'tool-call' as const,
-					toolName: call.toolName,
-					args: call.args,
-					result: result?.result
-				};
-			});
+			const text = response.text;
+
+			for (const toolCall of response.toolCalls) {
+				const toolResult = response.toolResults.find((r) => r.toolCallId === toolCall.toolCallId);
+				storedToolCalls.push({
+					id: toolCall.toolCallId,
+					type: 'tool-call',
+					toolName: toolCall.toolName,
+					args: toolCall.input as Record<string, unknown>,
+					result: toolResult?.output
+				});
+			}
 
 			await db.insert(message).values({
 				chatId,

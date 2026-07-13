@@ -15,6 +15,13 @@
       "when": 1783952996911,
       "tag": "0001_lively_golden_guardian",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1783954229843,
+      "tag": "0002_condemned_rhodey",
+      "breakpoints": true
     }
   ]
 }

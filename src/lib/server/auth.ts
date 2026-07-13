@@ -10,6 +10,20 @@ export const auth = betterAuth({
 	secret: env.BETTER_AUTH_SECRET,
 	database: drizzleAdapter(db, { provider: 'sqlite' }),
 	emailAndPassword: { enabled: true },
+	user: {
+		additionalFields: {
+			username: {
+				type: 'string',
+				required: false,
+				defaultValue: null
+			},
+			bio: {
+				type: 'string',
+				required: false,
+				defaultValue: null
+			}
+		}
+	},
 	socialProviders: {
 		github: {
 			clientId: env.GITHUB_CLIENT_ID,
