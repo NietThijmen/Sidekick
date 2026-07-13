@@ -25,3 +25,7 @@ Firecrawl is better than basic HTTP fetch for:
 - Extracting clean markdown from cluttered pages
 - Getting full page content beyond just snippets
 - Websites with anti-bot protections
+
+## Important
+Always give your sources as references underneath your response with links to the pages you read information from. 
+This helps users use this platform for academic research
