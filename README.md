@@ -34,6 +34,8 @@ pnpm dev
 | Variable | Description |
 |---|---|
 | `OPENROUTER_API_KEY` | OpenRouter API key for AI model access |
+| `GITHUB_CLIENT_ID` | GitHub OAuth client ID (for login) |
+| `GITHUB_CLIENT_SECRET` | GitHub OAuth client secret (for login) |
 | `GITHUB_TOKEN` | GitHub personal access token (fallback for unlinked users) |
 ### Optional environment variables
 
@@ -42,8 +44,6 @@ pnpm dev
 | `ATLASSIAN_CLIENT_ID` | Atlassian OAuth client ID (enables Atlassian sign-in + Jira tools) |
 | `ATLASSIAN_CLIENT_SECRET` | Atlassian OAuth client secret |
 | `ATLASSIAN_CLOUD_ID` | Bypasses auto-detection of the Jira cloud ID |
-| `GITHUB_CLIENT_ID` | GitHub OAuth client ID (for login) |
-| `GITHUB_CLIENT_SECRET` | GitHub OAuth client secret (for login) |
 | `BETTER_AUTH_URL` | Base URL for auth redirects (defaults to `localhost:5173`) |
 | `BETTER_AUTH_SECRET` | Secret for auth session encryption |
 | `CONTEXT7_API_KEY` | Context7 SDK key for live documentation lookups |
