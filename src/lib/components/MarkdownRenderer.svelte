@@ -1,7 +1,5 @@
 <script lang="ts">
-	import { marked } from 'marked';
-	import hljs from 'highlight.js';
-	import 'highlight.js/styles/github-dark.css';
+	import { markdown, sanitizeHtml } from './markdown';
 
 	interface Props {
 		content: string;
@@ -10,27 +8,14 @@
 
 	let { content, class: className = '' }: Props = $props();
 
-	marked.use({
-		renderer: {
-			code({ text, lang }: { text: string; lang?: string }) {
-				const language = lang && hljs.getLanguage(lang) ? lang : 'plaintext';
-				const highlighted = hljs.highlight(text, { language }).value;
-				return `<div class="hljs overflow-x-auto rounded-lg"><pre class="m-0 p-4"><code class="language-${language}">${highlighted}</code></pre></div>`;
-			}
-		},
-		gfm: true,
-		breaks: false,
-		headerIds: false,
-		mangle: false
-	});
-
-	const rendered = $derived(marked.parse(content, { async: false }) as string);
+	const rendered = $derived(sanitizeHtml(markdown.parse(content, { async: false }) as string));
 </script>
 
 <div
 	class="prose prose-sm max-w-none dark:prose-invert {className}"
 	class:prose-invert={className.includes('text-primary-foreground')}
 >
+	<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 	{@html rendered}
 </div>
 
@@ -40,42 +25,58 @@
 	}
 
 	:global(.prose code) {
-		@apply rounded px-1 py-0.5 text-xs;
+		border-radius: 0.25rem;
+		padding: 0.125rem 0.25rem;
+		font-size: 0.75rem;
+		line-height: 1rem;
 	}
 
 	:global(.prose code:not(pre code)) {
-		@apply bg-muted text-foreground;
+		background-color: var(--muted);
+		color: var(--foreground);
 	}
 
 	:global(.prose pre code) {
-		@apply bg-transparent p-0 text-inherit;
+		background-color: transparent;
+		padding: 0;
+		color: inherit;
 	}
 
 	:global(.prose table) {
-		@apply w-full text-sm;
+		width: 100%;
+		font-size: 0.875rem;
+		line-height: 1.25rem;
 	}
 
 	:global(.prose th, .prose td) {
-		@apply border px-3 py-2;
+		border-width: 1px;
+		padding: 0.5rem 0.75rem;
 	}
 
 	:global(.prose th) {
-		@apply bg-muted font-semibold;
+		background-color: var(--muted);
+		font-weight: 600;
 	}
 
 	:global(.prose blockquote) {
-		@apply border-l-4 border-muted-foreground/30 pl-4 italic;
+		border-left-width: 4px;
+		border-color: color-mix(in oklch, var(--muted-foreground) 30%, transparent);
+		padding-left: 1rem;
+		font-style: italic;
 	}
 
 	:global(.prose ul.contains-task-list) {
-		@apply list-none pl-0;
+		list-style-type: none;
+		padding-left: 0;
 	}
 
 	:global(.prose li.task-list-item) {
-		@apply flex items-center gap-2;
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
 	}
 
 	:global(.prose input[type='checkbox']) {
-		@apply pointer-events-none;
+		pointer-events: none;
 	}
 </style>

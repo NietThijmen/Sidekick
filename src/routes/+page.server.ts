@@ -6,9 +6,9 @@ import { desc, eq } from 'drizzle-orm';
 import { generateText } from '$lib/server/ai';
 import { openrouter } from '$lib/server/ai';
 import {
-	aiTools,
 	buildSystemPrompt,
 	findActiveSkills,
+	getToolsForUser,
 	loadSkills,
 	loadSystemPrompt
 } from '$lib/server/ai';
@@ -130,7 +130,7 @@ export const actions: Actions = {
 		const baseSystemPrompt = loadSystemPrompt();
 		const skills = loadSkills();
 		const activeSkills = findActiveSkills(content, skills);
-		const systemPrompt = buildSystemPrompt(baseSystemPrompt, activeSkills);
+		const systemPrompt = `${buildSystemPrompt(baseSystemPrompt, activeSkills)}\n\n## Context\n\nCurrent chat ID: ${chatId}`;
 
 		const storedToolCalls: Array<{
 			id: string;
@@ -142,25 +142,31 @@ export const actions: Actions = {
 
 		try {
 			const MAX_STEPS = 3;
+			const tools = await getToolsForUser(userId);
 			const response = await generateText({
 				model: openrouter('openai/gpt-5.6-luna'),
 				messages: chatMessages as ModelMessage[],
 				system: systemPrompt,
-				tools: aiTools,
+				tools,
 				stopWhen: isStepCount(MAX_STEPS)
 			});
 
 			const text = response.text;
 
-			for (const toolCall of response.toolCalls) {
-				const toolResult = response.toolResults.find((r) => r.toolCallId === toolCall.toolCallId);
-				storedToolCalls.push({
-					id: toolCall.toolCallId,
-					type: 'tool-call',
-					toolName: toolCall.toolName,
-					args: toolCall.input as Record<string, unknown>,
-					result: toolResult?.output
-				});
+			const toolCalls = response.toolCalls ?? [];
+			const toolResults = response.toolResults ?? [];
+			for (let i = 0; i < toolCalls.length; i++) {
+				const tc = toolCalls[i];
+				const tr = toolResults.find((r) => r?.toolCallId === tc?.toolCallId);
+				if (tc) {
+					storedToolCalls.push({
+						id: tc.toolCallId,
+						type: 'tool-call',
+						toolName: tc.toolName,
+						args: tc.input as Record<string, unknown>,
+						result: tr?.output
+					});
+				}
 			}
 
 			await db.insert(message).values({

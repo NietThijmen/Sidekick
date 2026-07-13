@@ -11,4 +11,4 @@ export const openrouter = createOpenRouter({
 
 export * from 'ai';
 export * from './skills';
-export { aiTools } from './tools';
+export { getToolsForUser } from './tools';

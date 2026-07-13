@@ -12,7 +12,7 @@
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
 	import { Separator } from '$lib/components/ui/separator';
-	import { ArrowLeft, Calendar, Loader2, LogOut, Pencil } from '@lucide/svelte';
+	import { ArrowLeft, Calendar, Loader2, LogOut, Pencil, Shield } from '@lucide/svelte';
 
 	interface ProfileFormData {
 		error?: string;
@@ -106,10 +106,16 @@
 				</Button>
 				<h1 class="text-lg font-semibold">Profile</h1>
 			</div>
-			<Button variant="ghost" size="sm" onclick={handleLogout} class="gap-2">
-				<LogOut class="size-4" />
-				<span class="hidden sm:inline">Sign out</span>
-			</Button>
+			<div class="flex items-center gap-2">
+				<Button variant="ghost" size="sm" href={resolve('/profile/auth')} class="gap-2">
+					<Shield class="size-4" />
+					<span class="hidden sm:inline">Security</span>
+				</Button>
+				<Button variant="ghost" size="sm" onclick={handleLogout} class="gap-2">
+					<LogOut class="size-4" />
+					<span class="hidden sm:inline">Sign out</span>
+				</Button>
+			</div>
 		</div>
 	</header>
 

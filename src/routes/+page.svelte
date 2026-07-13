@@ -95,11 +95,15 @@
 				href={resolve('/profile')}
 				class="flex items-center gap-2 px-2 text-sm text-muted-foreground hover:text-foreground"
 			>
-				<div
-					class="flex size-8 items-center justify-center rounded-full bg-primary text-xs font-medium text-primary-foreground"
-				>
-					{getInitials(data.user.name)}
-				</div>
+				{#if data.user.image}
+					<img src={data.user.image} alt="" class="size-8 rounded-full object-cover" />
+				{:else}
+					<div
+						class="flex size-8 items-center justify-center rounded-full bg-primary text-xs font-medium text-primary-foreground"
+					>
+						{getInitials(data.user.name)}
+					</div>
+				{/if}
 				<span class="hidden sm:inline">{data.user.name}</span>
 			</Button>
 			<Button variant="ghost" size="icon" onclick={handleLogout} aria-label="Log out">
@@ -235,7 +239,9 @@
 											? 'bg-primary-foreground/20 text-primary-foreground'
 											: 'bg-background text-foreground'}"
 									>
-										{#if message.role === 'user'}
+										{#if message.role === 'user' && data.user.image}
+											<img src={data.user.image} alt="" class="size-8 rounded-full object-cover" />
+										{:else if message.role === 'user'}
 											<User class="size-4" />
 										{:else}
 											<Bot class="size-4" />
@@ -244,7 +250,9 @@
 									<div class="min-w-0 space-y-1">
 										<MarkdownRenderer
 											content={message.content}
-											class={message.role === 'user' ? 'text-primary-foreground' : 'text-foreground'}
+											class={message.role === 'user'
+												? 'text-primary-foreground'
+												: 'text-foreground'}
 										/>
 										<span class="text-xs opacity-70">
 											{new Date(message.createdAt).toLocaleTimeString([], {

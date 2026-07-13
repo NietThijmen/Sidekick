@@ -9,6 +9,7 @@
 - Uses the [Vercel AI SDK](https://sdk.vercel.ai/) (`ai`) with the official [`@openrouter/ai-sdk-provider`](https://github.com/OpenRouterTeam/ai-sdk-provider).
 - Shared server library: `src/lib/server/ai/index.ts`.
 - Configure with the `OPENROUTER_API_KEY` environment variable.
+- Atlassian OAuth is configured in `src/lib/server/auth.ts` using `ATLASSIAN_CLIENT_ID` and `ATLASSIAN_CLIENT_SECRET`.
 - Import helpers and the configured provider from `$lib/server/ai`:
 
   ```ts

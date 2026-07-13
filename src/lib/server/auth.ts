@@ -10,7 +10,20 @@ export const auth = betterAuth({
 	secret: env.BETTER_AUTH_SECRET,
 	database: drizzleAdapter(db, { provider: 'sqlite' }),
 	emailAndPassword: { enabled: true },
+	account: {
+		accountLinking: {
+			trustedProviders: ['github', 'atlassian'],
+			allowDifferentEmails: true
+		}
+	},
 	user: {
+		changeEmail: {
+			enabled: true,
+			updateEmailWithoutVerification: true,
+			sendChangeEmailVerification: async ({ user, newEmail, url }) => {
+				console.info('[change-email]', { user: user.email, newEmail, url });
+			}
+		},
 		additionalFields: {
 			username: {
 				type: 'string',
@@ -27,7 +40,13 @@ export const auth = betterAuth({
 	socialProviders: {
 		github: {
 			clientId: env.GITHUB_CLIENT_ID,
-			clientSecret: env.GITHUB_CLIENT_SECRET
+			clientSecret: env.GITHUB_CLIENT_SECRET,
+			scope: ['read:user', 'user:email', 'repo']
+		},
+		atlassian: {
+			clientId: env.ATLASSIAN_CLIENT_ID,
+			clientSecret: env.ATLASSIAN_CLIENT_SECRET,
+			scope: ['read:jira-work', 'read:jira-user', 'write:jira-work', 'read:me', 'read:account']
 		}
 	},
 	plugins: [

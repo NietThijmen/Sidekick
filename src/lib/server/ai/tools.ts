@@ -3,10 +3,35 @@ import { tool } from 'ai';
 import { z } from 'zod';
 import { getRequestEvent } from '$app/server';
 import { env } from '$env/dynamic/private';
+import { auth } from '$lib/server/auth';
+import { db } from '$lib/server/db';
+import { account } from '$lib/server/db/auth.schema';
+import { chat } from '$lib/server/db/schema';
+import { eq } from 'drizzle-orm';
 import { loadSkills } from './skills';
 
+async function getGitHubToken(): Promise<string | undefined> {
+	const event = getRequestEvent();
+	if (!event.locals.user) {
+		return env.GITHUB_TOKEN;
+	}
+
+	try {
+		const result = await auth.api.getAccessToken({
+			body: {
+				providerId: 'github',
+				userId: event.locals.user.id
+			},
+			headers: event.request.headers
+		});
+		return result.accessToken ?? env.GITHUB_TOKEN;
+	} catch {
+		return env.GITHUB_TOKEN;
+	}
+}
+
 async function githubFetch(path: string) {
-	const token = env.GITHUB_TOKEN;
+	const token = await getGitHubToken();
 	const headers: Record<string, string> = {
 		Accept: 'application/vnd.github+json',
 		'X-GitHub-Api-Version': '2022-11-28',
@@ -27,7 +52,7 @@ async function githubFetch(path: string) {
 	return response.json();
 }
 
-export const aiTools = {
+const alwaysAvailableTools = {
 	getCurrentTime: tool({
 		description: 'Get the current date and time in ISO format',
 		inputSchema: z.object({}).describe('No parameters needed'),
@@ -90,6 +115,41 @@ export const aiTools = {
 		}
 	} as any),
 
+	setChatTitle: tool({
+		description:
+			'Set the title of a chat conversation. Use this to rename a chat based on the conversation topic.',
+		inputSchema: z.object({
+			chatId: z.string().uuid().describe('The ID of the chat to rename'),
+			title: z.string().min(1).max(100).describe('The new title for the chat')
+		}),
+		execute: async ({ chatId, title }: { chatId: string; title: string }) => {
+			const event = getRequestEvent();
+			if (!event.locals.user) {
+				return { error: 'User not logged in' };
+			}
+
+			const existing = await db
+				.select({ id: chat.id, userId: chat.userId })
+				.from(chat)
+				.where(eq(chat.id, chatId))
+				.limit(1);
+
+			if (existing.length === 0) {
+				return { error: 'Chat not found' };
+			}
+
+			if (existing[0].userId !== event.locals.user.id) {
+				return { error: 'Chat does not belong to the current user' };
+			}
+
+			await db.update(chat).set({ title }).where(eq(chat.id, chatId));
+
+			return { id: chatId, title };
+		}
+	} as any)
+};
+
+const gitHubTools = {
 	getGitHubRepository: tool({
 		description: 'Get information about a GitHub repository',
 		inputSchema: z.object({
@@ -299,4 +359,18 @@ export const aiTools = {
 			};
 		}
 	} as any)
-} as const;
+};
+
+export async function getToolsForUser(userId: string) {
+	const linkedProviders = await db
+		.select({ providerId: account.providerId })
+		.from(account)
+		.where(eq(account.userId, userId));
+
+	const providerIds = linkedProviders.map((a) => a.providerId);
+
+	return {
+		...alwaysAvailableTools,
+		...(providerIds.includes('github') ? gitHubTools : {})
+	};
+}
