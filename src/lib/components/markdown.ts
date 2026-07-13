@@ -13,7 +13,8 @@ markdown.use({
 		code({ text, lang }: { text: string; lang?: string }) {
 			const language = lang && hljs.getLanguage(lang) ? lang : 'plaintext';
 			const highlighted = hljs.highlight(text, { language }).value;
-			return `<div class="hljs overflow-x-auto rounded-lg"><pre class="m-0 p-4"><code class="language-${language}">${highlighted}</code></pre></div>`;
+			const encoded = encodeURIComponent(text);
+			return `<div class="code-block-wrapper"><button class="copy-button" data-copy-code="${encoded}" aria-label="Copy code to clipboard"></button><div class="hljs overflow-x-auto rounded-lg"><pre class="m-0 p-4"><code class="language-${language}">${highlighted}</code></pre></div></div>`;
 		}
 	}
 });
