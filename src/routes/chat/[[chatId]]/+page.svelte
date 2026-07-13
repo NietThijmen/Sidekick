@@ -11,7 +11,6 @@
 	import LabLogo from '$lib/components/LabLogo.svelte';
 	import {
 		Loader2,
-		LogOut,
 		Send,
 		User,
 		Bot,
@@ -67,11 +66,6 @@
 			return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 		}
 		return d.toLocaleDateString([], { month: 'short', day: 'numeric' });
-	}
-
-	async function handleLogout() {
-		await fetch('/api/auth/sign-out', { method: 'POST' });
-		window.location.href = '/login';
 	}
 
 	async function selectChat(chatId: string) {
@@ -174,19 +168,21 @@
 			<Bot class="size-6 hidden sm:block" />
 			<h1 class="text-lg font-semibold">Sidekick</h1>
 
-			<AgentSelector
-				agents={data.agents}
-				value={currentAgent?.id ?? ''}
-				onSelect={changeAgent}
-				onRemove={removeAgent}
-			/>
+			<div class="hidden lg:flex items-center gap-2">
+				<AgentSelector
+					agents={data.agents}
+					value={currentAgent?.id ?? ''}
+					onSelect={changeAgent}
+					onRemove={removeAgent}
+				/>
 
-			<ModelSelector
-				models={data.models}
-				value={effectiveModel}
-				onSelect={changeModel}
-				inheritFromAgent={currentAgent}
-			/>
+				<ModelSelector
+					models={data.models}
+					value={effectiveModel}
+					onSelect={changeModel}
+					inheritFromAgent={currentAgent}
+				/>
+			</div>
 		</div>
 		<div class="flex items-center gap-3">
 			<Button
@@ -206,16 +202,13 @@
 				{/if}
 				<span class="hidden sm:inline">{data.user.name}</span>
 			</Button>
-			<Button variant="ghost" size="icon" onclick={handleLogout} aria-label="Log out">
-				<LogOut class="size-4" />
-			</Button>
 		</div>
 	</header>
 
 	<div class="flex flex-1 overflow-hidden">
 		<!-- Sidebar -->
 		<aside
-			class="absolute inset-y-0 left-0 z-20 w-72 transform border-r bg-card transition-transform lg:static lg:translate-x-0 {isSidebarOpen
+			class="absolute inset-y-0 left-0 z-20 w-full transform border-r bg-card transition-transform lg:static lg:w-72 lg:translate-x-0 {isSidebarOpen
 				? 'translate-x-0'
 				: '-translate-x-full'}"
 			style="top: 57px; height: calc(100% - 57px);"
@@ -231,6 +224,20 @@
 							<Plus class="size-4" />
 							New chat
 						</button>
+					</div>
+					<div class="mt-3 flex flex-col gap-2 lg:hidden">
+						<AgentSelector
+							agents={data.agents}
+							value={currentAgent?.id ?? ''}
+							onSelect={changeAgent}
+							onRemove={removeAgent}
+						/>
+						<ModelSelector
+							models={data.models}
+							value={effectiveModel}
+							onSelect={changeModel}
+							inheritFromAgent={currentAgent}
+						/>
 					</div>
 				</div>
 
