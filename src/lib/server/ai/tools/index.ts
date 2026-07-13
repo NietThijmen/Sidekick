@@ -6,6 +6,8 @@ import { gitHubTools } from './github';
 import { jiraTools } from './jira';
 import { forgeTools } from './forge';
 import { context7Tools } from './context7';
+import { firecrawlTools } from './firecrawl';
+import { env } from '$env/dynamic/private';
 
 export async function getToolsForUser(userId: string) {
 	const linkedProviders = await db
@@ -25,11 +27,17 @@ export async function getToolsForUser(userId: string) {
 		columns: { id: true }
 	});
 
+	const firecrawlKey = await db.query.apiKey.findFirst({
+		where: and(eq(apiKey.userId, userId), eq(apiKey.provider, 'firecrawl')),
+		columns: { id: true }
+	});
+
 	return {
 		...alwaysAvailableTools,
 		...(context7Key ? context7Tools : {}),
 		...(providerIds.includes('github') ? gitHubTools : {}),
 		...(providerIds.includes('atlassian') ? jiraTools : {}),
-		...(forgeKey ? forgeTools : {})
+		...(forgeKey ? forgeTools : {}),
+		...(firecrawlKey || env.FIRECRAWL_API_KEY ? firecrawlTools : {})
 	};
 }
