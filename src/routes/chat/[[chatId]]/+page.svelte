@@ -172,7 +172,7 @@
 				{/if}
 			</Button>
 			<Bot class="size-6 hidden sm:block" />
-			<h1 class="text-lg font-semibold">AI Assistant</h1>
+			<h1 class="text-lg font-semibold">Sidekick</h1>
 
 			<AgentSelector
 				agents={data.agents}
