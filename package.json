@@ -66,6 +66,7 @@
 		"highlight.js": "^11.11.1",
 		"isomorphic-dompurify": "2.14.0",
 		"marked": "^18.0.6",
+		"paneforge": "^1.0.2",
 		"zod": "^4.4.3"
 	}
 }
