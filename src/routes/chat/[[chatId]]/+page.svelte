@@ -509,12 +509,21 @@
 									<LabLogo lab={effectiveModelInfo?.lab ?? ''} class="size-4" />
 								</div>
 								<div class="min-w-0 space-y-1">
-									<MarkdownRenderer content={streamingContent} class="text-foreground" />
-									{#if isLoading}
-										<span class="inline-flex items-center gap-1 text-xs text-muted-foreground">
-											<Loader2 class="size-3 animate-spin" />
-											Thinking...
-										</span>
+									{#if streamingContent}
+										<MarkdownRenderer content={streamingContent} class="text-foreground" />
+										{#if isLoading}
+											<span class="inline-flex items-center gap-1 text-xs text-muted-foreground">
+												<Loader2 class="size-3 animate-spin" />
+												Thinking...
+											</span>
+										{/if}
+									{:else}
+										<div class="flex items-center gap-1 py-1 text-sm text-muted-foreground">
+											<span>Thinking</span>
+											<span class="thinking-dot">.</span>
+											<span class="thinking-dot" style="animation-delay: 0.1s">.</span>
+											<span class="thinking-dot" style="animation-delay: 0.2s">.</span>
+										</div>
 									{/if}
 								</div>
 							</CardContent>
@@ -568,3 +577,26 @@
 		</main>
 	</div>
 </div>
+
+<style>
+	.thinking-dot {
+		display: inline-block;
+		animation: thinking-bounce 0.8s infinite;
+	}
+
+	.thinking-dot:first-child {
+		animation-delay: 0s;
+	}
+
+	@keyframes thinking-bounce {
+		0%,
+		100% {
+			opacity: 0.2;
+			transform: translateY(0);
+		}
+		50% {
+			opacity: 1;
+			transform: translateY(-2px);
+		}
+	}
+</style>
