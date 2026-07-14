@@ -5,8 +5,6 @@ import { chat, message } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
 import {
 	streamText,
-	toTextStream,
-	createTextStreamResponse,
 	openrouter,
 	isStepCount,
 	modelMessageSchema,
@@ -129,6 +127,8 @@ export const POST: RequestHandler = async (event) => {
 			return error(400, `Invalid messages: ${validationResult.error.message}`);
 		}
 
+		let reasoning = '';
+
 		const result = streamText({
 			model: openrouter(modelId),
 			messages: chatMessages as ModelMessage[],
@@ -166,6 +166,7 @@ export const POST: RequestHandler = async (event) => {
 					chatId,
 					role: 'assistant',
 					content: text,
+					reasoning: reasoning || undefined,
 					toolCalls: storedToolCalls.length > 0 ? storedToolCalls : undefined,
 					usage: {
 						promptTokens: inputTokens,
@@ -182,8 +183,36 @@ export const POST: RequestHandler = async (event) => {
 			}
 		});
 
-		return createTextStreamResponse({
-			stream: toTextStream({ stream: result.stream })
+		const encoder = new TextEncoder();
+		const jsonStream = new ReadableStream({
+			async start(controller) {
+				try {
+					for await (const part of result.stream) {
+						if (part.type === 'reasoning-delta') {
+							reasoning += part.text;
+							controller.enqueue(
+								encoder.encode(JSON.stringify({ type: 'reasoning', content: part.text }) + '\n')
+							);
+						} else if (part.type === 'text-delta') {
+							controller.enqueue(
+								encoder.encode(JSON.stringify({ type: 'content', content: part.text }) + '\n')
+							);
+						}
+					}
+					controller.enqueue(encoder.encode(JSON.stringify({ type: 'done' }) + '\n'));
+				} catch {
+					controller.enqueue(encoder.encode(JSON.stringify({ type: 'error' }) + '\n'));
+				} finally {
+					controller.close();
+				}
+			}
+		});
+
+		return new Response(jsonStream, {
+			headers: {
+				'Content-Type': 'text/plain; charset=utf-8',
+				'Cache-Control': 'no-cache'
+			}
 		});
 	} catch (err) {
 		await saveErrorMessage(err);

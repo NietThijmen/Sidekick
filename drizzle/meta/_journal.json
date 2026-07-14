@@ -43,6 +43,13 @@
       "when": 1783964995035,
       "tag": "0005_brief_carmella_unuscione",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1784041821299,
+      "tag": "0006_graceful_warlock",
+      "breakpoints": true
     }
   ]
 }

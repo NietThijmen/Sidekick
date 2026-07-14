@@ -68,6 +68,7 @@ export const message = sqliteTable(
 			.references(() => chat.id, { onDelete: 'cascade' }),
 		role: text('role', { enum: ['user', 'assistant', 'system'] }).notNull(),
 		content: text('content').notNull(),
+		reasoning: text('reasoning'),
 		toolCalls: text('tool_calls', { mode: 'json' }).$type<
 			Array<{
 				id: string;

@@ -43,8 +43,10 @@
 		}>
 	>([]);
 	let streamingContent = $state('');
+	let streamingReasoning = $state('');
 	let streamingMessageId = $state<string | null>(null);
 	let submitError = $state('');
+	let reasoningOpen = $state(true);
 
 	let messages = $derived([...data.messages, ...optimisticMessages]);
 	let currentAgent = $derived(data.currentChat.agent ?? null);
@@ -94,6 +96,8 @@
 
 			streamingMessageId = crypto.randomUUID();
 			streamingContent = '';
+			streamingReasoning = '';
+			reasoningOpen = true;
 
 			const reader = response.body?.getReader();
 			if (!reader) {
@@ -101,10 +105,29 @@
 			}
 
 			const decoder = new TextDecoder();
+			let buffer = '';
 			while (true) {
 				const { done, value } = await reader.read();
 				if (done) break;
-				streamingContent += decoder.decode(value, { stream: true });
+				buffer += decoder.decode(value, { stream: true });
+
+				const lines = buffer.split('\n');
+				buffer = lines.pop() || '';
+
+				for (const line of lines) {
+					if (!line.trim()) continue;
+					try {
+						const parsed = JSON.parse(line);
+						if (parsed.type === 'reasoning') {
+							streamingReasoning += parsed.content;
+						} else if (parsed.type === 'content') {
+							streamingContent += parsed.content;
+							reasoningOpen = false;
+						}
+					} catch {
+						// skip non-JSON lines
+					}
+				}
 				tick().then(scrollToBottom);
 			}
 		} catch (err) {
@@ -114,6 +137,7 @@
 		} finally {
 			streamingMessageId = null;
 			streamingContent = '';
+			streamingReasoning = '';
 			isLoading = false;
 			await invalidateAll();
 			optimisticMessages = [];
@@ -457,13 +481,16 @@
 												minute: '2-digit'
 											})}
 										</span>
-										{#if message.role === 'assistant' && (message.toolCalls?.length || message.usage)}
-											<details class="pt-2">
+										{#if message.role === 'assistant' && (message.reasoning || message.toolCalls?.length || message.usage)}
+											<details class="pt-2" open={false}>
 												<summary
 													class="flex cursor-pointer list-none items-center gap-1 text-xs font-medium opacity-80"
 												>
-													<Wrench class="size-3" />
+													{#if message.reasoning}
+														<span>Reasoning{message.toolCalls?.length ? ' + ' : ''}</span>
+													{/if}
 													{#if message.toolCalls?.length}
+														<Wrench class="size-3" />
 														<span
 															>{message.toolCalls.length} tool call{message.toolCalls.length === 1
 																? ''
@@ -477,6 +504,13 @@
 													{/if}
 												</summary>
 												<div class="mt-2 space-y-2">
+													{#if message.reasoning}
+														<div
+															class="rounded-lg border bg-background/50 p-2 text-xs text-muted-foreground"
+														>
+															{message.reasoning}
+														</div>
+													{/if}
 													{#each message.toolCalls as toolCall (toolCall.id)}
 														<div class="rounded-lg border bg-background/50 p-2 text-xs">
 															<p class="font-semibold">{toolCall.toolName}</p>
@@ -509,6 +543,20 @@
 									<LabLogo lab={effectiveModelInfo?.lab ?? ''} class="size-4" />
 								</div>
 								<div class="min-w-0 space-y-1">
+									{#if streamingReasoning}
+										<details open={reasoningOpen}>
+											<summary
+												class="cursor-pointer text-xs font-medium text-muted-foreground hover:text-foreground"
+											>
+												Reasoning
+											</summary>
+											<div
+												class="mt-1 rounded-md border bg-background/50 p-2 text-xs text-muted-foreground"
+											>
+												{streamingReasoning}
+											</div>
+										</details>
+									{/if}
 									{#if streamingContent}
 										<MarkdownRenderer content={streamingContent} class="text-foreground" />
 										{#if isLoading}
@@ -517,7 +565,7 @@
 												Thinking...
 											</span>
 										{/if}
-									{:else}
+									{:else if !streamingReasoning}
 										<div class="flex items-center gap-1 py-1 text-sm text-muted-foreground">
 											<span>Thinking</span>
 											<span class="thinking-dot">.</span>
