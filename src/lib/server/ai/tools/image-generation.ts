@@ -1,4 +1,5 @@
-import { tool, generateImage, openrouter } from '$lib/server/ai';
+import { tool, generateImage } from 'ai';
+import { openrouter } from '$lib/server/ai';
 import { z } from 'zod';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -35,7 +36,8 @@ const MODEL_OPTIONS: { value: ImageModelId; label: string }[] = [
 	},
 	{
 		value: 'bytedance-seed/seedream-4.5',
-		label: 'Seedream 4.5 (ByteDance) - Balanced quality and speed (Minimal size: 3686400 pixels. For example, 1920x1920 or 2048x1800)'
+		label:
+			'Seedream 4.5 (ByteDance) - Balanced quality and speed (Minimal size: 3686400 pixels. For example, 1920x1920 or 2048x1800)'
 	}
 ];
 
