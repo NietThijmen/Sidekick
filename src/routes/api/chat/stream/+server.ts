@@ -128,6 +128,7 @@ export const POST: RequestHandler = async (event) => {
 		}
 
 		let reasoning = '';
+		const startTime = performance.now();
 
 		const result = streamText({
 			model: openrouter(modelId),
@@ -136,6 +137,8 @@ export const POST: RequestHandler = async (event) => {
 			tools,
 			stopWhen: isStepCount(MAX_STEPS),
 			onEnd: async ({ text, toolCalls, toolResults, usage }) => {
+				const durationMs = performance.now() - startTime;
+
 				const storedToolCalls: Array<{
 					id: string;
 					type: 'tool-call';
@@ -161,6 +164,9 @@ export const POST: RequestHandler = async (event) => {
 				const inputTokens = usage?.inputTokens ?? 0;
 				const outputTokens = usage?.outputTokens ?? 0;
 				const totalCost = calculateCost(modelId, inputTokens, outputTokens);
+				const totalTokens = usage?.totalTokens ?? 0;
+				const durationSec = durationMs / 1000;
+				const tokensPerSecond = durationSec > 0 ? totalTokens / durationSec : 0;
 
 				await db.insert(message).values({
 					chatId,
@@ -171,8 +177,10 @@ export const POST: RequestHandler = async (event) => {
 					usage: {
 						promptTokens: inputTokens,
 						completionTokens: outputTokens,
-						totalTokens: usage?.totalTokens ?? 0,
-						totalCost
+						totalTokens,
+						totalCost,
+						durationMs,
+						tokensPerSecond
 					}
 				});
 
@@ -199,7 +207,19 @@ export const POST: RequestHandler = async (event) => {
 							);
 						}
 					}
-					controller.enqueue(encoder.encode(JSON.stringify({ type: 'done' }) + '\n'));
+					const durationMs = performance.now() - startTime;
+					const durationSec = durationMs / 1000;
+					const totalTokens = (await result.usage)?.totalTokens ?? 0;
+					const tokensPerSecond = durationSec > 0 ? totalTokens / durationSec : 0;
+					controller.enqueue(
+						encoder.encode(
+							JSON.stringify({
+								type: 'done',
+								durationMs,
+								tokensPerSecond
+							}) + '\n'
+						)
+					);
 				} catch {
 					controller.enqueue(encoder.encode(JSON.stringify({ type: 'error' }) + '\n'));
 				} finally {

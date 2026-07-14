@@ -46,6 +46,7 @@
 	let streamingContent = $state('');
 	let streamingReasoning = $state('');
 	let streamingMessageId = $state<string | null>(null);
+	let streamingTiming = $state<{ durationMs: number; tokensPerSecond: number } | null>(null);
 	let submitError = $state('');
 	let reasoningOpen = $state(true);
 
@@ -98,6 +99,7 @@
 			streamingMessageId = crypto.randomUUID();
 			streamingContent = '';
 			streamingReasoning = '';
+			streamingTiming = null;
 			reasoningOpen = true;
 
 			const reader = response.body?.getReader();
@@ -124,6 +126,11 @@
 						} else if (parsed.type === 'content') {
 							streamingContent += parsed.content;
 							reasoningOpen = false;
+						} else if (parsed.type === 'done') {
+							streamingTiming = {
+								durationMs: parsed.durationMs,
+								tokensPerSecond: parsed.tokensPerSecond
+							};
 						}
 					} catch {
 						// skip non-JSON lines
@@ -513,10 +520,22 @@
 																	: 's'}</span
 															>
 														{/if}
-														{#if message.usage?.totalCost}
-															<span class="ml-auto text-[10px] opacity-60"
-																>${message.usage.totalCost.toFixed(5)}</span
-															>
+														{#if message.usage}
+															<span class="ml-auto flex items-center gap-2 text-[10px] opacity-60">
+																{#if message.usage.totalCost}
+																	<span>${message.usage.totalCost.toFixed(5)}</span>
+																{/if}
+																{#if message.usage.durationMs}
+																	<span
+																		>{(message.usage.durationMs / 1000).toFixed(1)}s</span
+																	>
+																{/if}
+																{#if message.usage.tokensPerSecond}
+																	<span
+																		>{message.usage.tokensPerSecond.toFixed(0)} tok/s</span
+																	>
+																{/if}
+															</span>
 														{/if}
 													</summary>
 													<div class="mt-2 space-y-2">
@@ -587,6 +606,12 @@
 												<span class="thinking-dot">.</span>
 												<span class="thinking-dot" style="animation-delay: 0.1s">.</span>
 												<span class="thinking-dot" style="animation-delay: 0.2s">.</span>
+											</div>
+										{/if}
+										{#if streamingTiming}
+											<div class="mt-1 flex items-center gap-2 text-[10px] text-muted-foreground">
+												<span>{(streamingTiming.durationMs / 1000).toFixed(1)}s</span>
+												<span>{streamingTiming.tokensPerSecond.toFixed(0)} tok/s</span>
 											</div>
 										{/if}
 									</div>

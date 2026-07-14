@@ -103,11 +103,13 @@ export const message = sqliteTable(
 				result?: unknown;
 			}>
 		>(),
-		usage: text('usage', { mode: 'json' }).$type<{
+	 usage: text('usage', { mode: 'json' }).$type<{
 			promptTokens: number;
 			completionTokens: number;
 			totalTokens: number;
 			totalCost?: number;
+			durationMs?: number;
+			tokensPerSecond?: number;
 		}>(),
 		createdAt: integer('created_at', { mode: 'timestamp_ms' })
 			.default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
