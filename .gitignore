@@ -27,3 +27,6 @@ vite.config.ts.timestamp-*
 
 # SQLite
 *.db
+
+# Images
+static/generated-images
