@@ -12,7 +12,16 @@
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
 	import { Separator } from '$lib/components/ui/separator';
-	import { ArrowLeft, Bot, Calendar, KeyRound, Loader2, LogOut, Pencil, Shield } from '@lucide/svelte';
+	import {
+		ArrowLeft,
+		Bot,
+		Calendar,
+		KeyRound,
+		Loader2,
+		LogOut,
+		Pencil,
+		Shield
+	} from '@lucide/svelte';
 
 	interface ProfileFormData {
 		error?: string;

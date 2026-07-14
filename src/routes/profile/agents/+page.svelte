@@ -13,17 +13,7 @@
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
 	import ModelSelector from '$lib/components/ModelSelector.svelte';
-	import {
-		ArrowLeft,
-		Bot,
-		Loader2,
-		Plus,
-		Pencil,
-		Trash2,
-		X,
-		Save,
-		Rocket
-	} from '@lucide/svelte';
+	import { ArrowLeft, Bot, Loader2, Plus, Pencil, Trash2, X, Save, Rocket } from '@lucide/svelte';
 
 	interface Agent {
 		id: string;
@@ -54,7 +44,12 @@
 	let deletingId = $state<string | null>(null);
 	let showSuccess = $state(false);
 
-	let newForm = $state({ name: '', description: '', systemPrompt: '', model: 'openai/gpt-5.6-luna' });
+	let newForm = $state({
+		name: '',
+		description: '',
+		systemPrompt: '',
+		model: 'openai/gpt-5.6-luna'
+	});
 
 	let models = $state<Array<{ id: string; name: string; lab: string; tier: number }>>([]);
 
@@ -108,7 +103,12 @@
 	<header class="border-b">
 		<div class="mx-auto flex max-w-3xl items-center justify-between px-4 py-3">
 			<div class="flex items-center gap-2">
-				<Button variant="ghost" size="icon-sm" href={resolve('/profile')} aria-label="Back to profile">
+				<Button
+					variant="ghost"
+					size="icon-sm"
+					href={resolve('/profile')}
+					aria-label="Back to profile"
+				>
 					<ArrowLeft class="size-4" />
 				</Button>
 				<h1 class="text-lg font-semibold">Custom Agents</h1>
@@ -142,7 +142,9 @@
 			<Card class="mb-6 overflow-visible border-primary/30">
 				<CardHeader>
 					<CardTitle class="text-base">Create Agent</CardTitle>
-					<CardDescription>Configure a custom agent with its own system prompt and default model.</CardDescription>
+					<CardDescription
+						>Configure a custom agent with its own system prompt and default model.</CardDescription
+					>
 				</CardHeader>
 				<CardContent>
 					<form
@@ -202,18 +204,21 @@
 
 						<div class="grid gap-2">
 							<Label for="model">Default Model</Label>
-			<ModelSelector
-				models={models}
-				value={newForm.model}
-				onSelect={(id) => newForm.model = id}
-				name="model"
-				disabled={isSaving}
-				fullWidth
-			/>
+							<ModelSelector
+								{models}
+								value={newForm.model}
+								onSelect={(id) => (newForm.model = id)}
+								name="model"
+								disabled={isSaving}
+								fullWidth
+							/>
 						</div>
 
 						{#if form?.error && !isSaving}
-							<div class="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive" role="alert">
+							<div
+								class="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive"
+								role="alert"
+							>
 								{form.error}
 							</div>
 						{/if}
@@ -371,15 +376,16 @@
 										maxlength={10000}
 										disabled={isSaving}
 										class="min-h-[120px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-									>{agentItem.systemPrompt}</textarea>
+										>{agentItem.systemPrompt}</textarea
+									>
 								</div>
 
 								<div class="grid gap-2">
 									<Label for="model-{agentItem.id}">Default Model</Label>
 									<ModelSelector
-										models={models}
+										{models}
 										value={editingModel}
-										onSelect={(id) => editingModel = id}
+										onSelect={(id) => (editingModel = id)}
 										name="model"
 										disabled={isSaving}
 										fullWidth
@@ -387,7 +393,10 @@
 								</div>
 
 								{#if form?.error && !isSaving}
-									<div class="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive" role="alert">
+									<div
+										class="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive"
+										role="alert"
+									>
 										{form.error}
 									</div>
 								{/if}
@@ -408,12 +417,18 @@
 							<div class="grid gap-3">
 								<div class="flex items-center gap-2 text-sm text-muted-foreground">
 									<Rocket class="size-4" />
-									<span>Model: <span class="font-medium text-foreground">{modelName(agentItem.model)}</span></span>
+									<span
+										>Model: <span class="font-medium text-foreground"
+											>{modelName(agentItem.model)}</span
+										></span
+									>
 								</div>
 								{#if agentItem.systemPrompt}
 									<div>
 										<h3 class="mb-1 text-xs font-medium text-muted-foreground">System Prompt</h3>
-										<p class="whitespace-pre-wrap rounded-md bg-muted p-3 text-xs">{agentItem.systemPrompt}</p>
+										<p class="whitespace-pre-wrap rounded-md bg-muted p-3 text-xs">
+											{agentItem.systemPrompt}
+										</p>
 									</div>
 								{/if}
 							</div>

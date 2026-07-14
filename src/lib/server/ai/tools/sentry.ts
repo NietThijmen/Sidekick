@@ -73,7 +73,8 @@ async function sentryFetchWithOrg(userId: string, path: string) {
 
 export const sentryTools = {
 	sentryListProjects: tool({
-		description: 'List all Sentry projects the auth token has access to in the configured organization',
+		description:
+			'List all Sentry projects the auth token has access to in the configured organization',
 		inputSchema: z.object({}).describe('No parameters needed'),
 		execute: async () => {
 			const event = getRequestEvent();
@@ -111,10 +112,7 @@ export const sentryTools = {
 				.enum(['unresolved', 'resolved', 'ignored'])
 				.optional()
 				.describe('Filter by status (default: unresolved)'),
-			statsPeriod: z
-				.string()
-				.optional()
-				.describe('Time range (e.g. "14d", "24h"). Default: "14d"'),
+			statsPeriod: z.string().optional().describe('Time range (e.g. "14d", "24h"). Default: "14d"'),
 			limit: z.number().int().min(1).max(100).optional().describe('Max results (default: 20)'),
 			sort: z
 				.enum(['date', 'freq', 'new', 'priority'])

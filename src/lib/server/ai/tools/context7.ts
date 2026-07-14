@@ -29,7 +29,9 @@ export const context7Tools = {
 				.describe('What you want to know about the library (e.g. "how to set up authentication")'),
 			libraryName: z
 				.string()
-				.describe('The name of the library or framework (e.g. "Next.js", "Express", "Tailwind CSS")')
+				.describe(
+					'The name of the library or framework (e.g. "Next.js", "Express", "Tailwind CSS")'
+				)
 		}),
 		execute: async ({ query, libraryName }: { query: string; libraryName: string }) => {
 			const event = getRequestEvent();
@@ -38,8 +40,7 @@ export const context7Tools = {
 			const client = await getClient(event.locals.user.id);
 			if (!client) {
 				return {
-					error:
-						'Context7 API key not configured. Add one in your profile settings under API Keys.'
+					error: 'Context7 API key not configured. Add one in your profile settings under API Keys.'
 				};
 			}
 
@@ -55,7 +56,9 @@ export const context7Tools = {
 					versions: lib.versions ?? []
 				}));
 			} catch (err) {
-				return { error: `Context7 search failed: ${err instanceof Error ? err.message : String(err)}` };
+				return {
+					error: `Context7 search failed: ${err instanceof Error ? err.message : String(err)}`
+				};
 			}
 		}
 	} as any),
@@ -78,8 +81,7 @@ export const context7Tools = {
 			const client = await getClient(event.locals.user.id);
 			if (!client) {
 				return {
-					error:
-						'Context7 API key not configured. Add one in your profile settings under API Keys.'
+					error: 'Context7 API key not configured. Add one in your profile settings under API Keys.'
 				};
 			}
 
@@ -87,7 +89,9 @@ export const context7Tools = {
 				const results = await client.getContext(query, libraryId, { type: 'txt' });
 				return { documentation: results };
 			} catch (err) {
-				return { error: `Context7 docs lookup failed: ${err instanceof Error ? err.message : String(err)}` };
+				return {
+					error: `Context7 docs lookup failed: ${err instanceof Error ? err.message : String(err)}`
+				};
 			}
 		}
 	} as any)

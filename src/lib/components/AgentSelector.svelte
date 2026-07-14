@@ -54,7 +54,10 @@
 				{#if selected}
 					<button
 						type="button"
-						onclick={() => { show = false; onRemove?.(); }}
+						onclick={() => {
+							show = false;
+							onRemove?.();
+						}}
 						class="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-xs text-muted-foreground transition-colors hover:bg-muted"
 					>
 						<X class="size-3" />

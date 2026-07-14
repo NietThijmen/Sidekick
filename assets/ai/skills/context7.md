@@ -26,6 +26,7 @@ When asked about a library, framework, SDK, or how to implement something, use t
 2. Then call `context7GetDocs` with the library ID and the specific question to get documentation snippets.
 
 This skill is especially useful for:
+
 - Syntax questions ("how do I use useEffect in React")
 - Setup/installation guides
 - API reference lookups

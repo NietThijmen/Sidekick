@@ -50,9 +50,7 @@
 	let selected = $derived(models.find((m) => m.id === value));
 
 	let filtered = $derived(
-		search
-			? models.filter((m) => m.name.toLowerCase().includes(search.toLowerCase()))
-			: models
+		search ? models.filter((m) => m.name.toLowerCase().includes(search.toLowerCase())) : models
 	);
 
 	let byLab = $derived(
@@ -74,8 +72,6 @@
 		search = '';
 		onSelect?.(id);
 	}
-
-
 </script>
 
 <div class={cn('relative', fullWidth && 'w-full', className)}>
@@ -86,8 +82,11 @@
 	<button
 		type="button"
 		onclick={() => (show = !show)}
-		disabled={disabled}
-		class={cn('flex items-center gap-1 rounded-md border px-2 py-1 text-xs text-muted-foreground hover:bg-muted disabled:opacity-50', fullWidth && 'w-full')}
+		{disabled}
+		class={cn(
+			'flex items-center gap-1 rounded-md border px-2 py-1 text-xs text-muted-foreground hover:bg-muted disabled:opacity-50',
+			fullWidth && 'w-full'
+		)}
 	>
 		<span>{selected?.name ?? 'Select a model'}</span>
 		{#if selected}
@@ -110,7 +109,9 @@
 			</div>
 			<div class="max-h-72 overflow-y-auto p-1">
 				{#each Object.entries(byLab) as [lab, labModels] (lab)}
-					<div class="px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+					<div
+						class="px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground"
+					>
 						{lab}
 					</div>
 					{#each labModels as model (model.id)}
@@ -123,12 +124,16 @@
 								: ''}"
 						>
 							<span class="truncate">{model.name}</span>
-							<span class="shrink-0 tabular-nums text-muted-foreground">{tierLabel(model.tier)}</span>
+							<span class="shrink-0 tabular-nums text-muted-foreground"
+								>{tierLabel(model.tier)}</span
+							>
 						</button>
 					{/each}
 				{/each}
 				{#if Object.keys(byLab).length === 0}
-					<p class="px-3 py-4 text-center text-xs text-muted-foreground">No models match your search.</p>
+					<p class="px-3 py-4 text-center text-xs text-muted-foreground">
+						No models match your search.
+					</p>
 				{/if}
 			</div>
 			{#if inheritFromAgent}

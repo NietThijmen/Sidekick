@@ -17,8 +17,8 @@ A personal AI assistant powered by OpenRouter, built with SvelteKit. Chat with L
 
 ## Screenshots
 
-| Login | Chat |
-|---|---|
+| Login                            | Chat                           |
+| -------------------------------- | ------------------------------ |
 | ![Login](.docs/assets/login.png) | ![Chat](.docs/assets/chat.png) |
 
 ## Getting started
@@ -31,25 +31,26 @@ pnpm dev
 
 ### Required environment variables
 
-| Variable | Description |
-|---|---|
-| `OPENROUTER_API_KEY` | OpenRouter API key for AI model access |
-| `GITHUB_CLIENT_ID` | GitHub OAuth client ID (for login) |
-| `GITHUB_CLIENT_SECRET` | GitHub OAuth client secret (for login) |
-| `GITHUB_TOKEN` | GitHub personal access token (fallback for unlinked users) |
+| Variable               | Description                                                |
+| ---------------------- | ---------------------------------------------------------- |
+| `OPENROUTER_API_KEY`   | OpenRouter API key for AI model access                     |
+| `GITHUB_CLIENT_ID`     | GitHub OAuth client ID (for login)                         |
+| `GITHUB_CLIENT_SECRET` | GitHub OAuth client secret (for login)                     |
+| `GITHUB_TOKEN`         | GitHub personal access token (fallback for unlinked users) |
+
 ### Optional environment variables
 
-| Variable | Description |
-|---|---|
-| `ATLASSIAN_CLIENT_ID` | Atlassian OAuth client ID (enables Atlassian sign-in + Jira tools) |
-| `ATLASSIAN_CLIENT_SECRET` | Atlassian OAuth client secret |
-| `ATLASSIAN_CLOUD_ID` | Bypasses auto-detection of the Jira cloud ID |
-| `BETTER_AUTH_URL` | Base URL for auth redirects (defaults to `localhost:5173`) |
-| `BETTER_AUTH_SECRET` | Secret for auth session encryption |
-| `CONTEXT7_API_KEY` | Context7 SDK key for live documentation lookups |
-| `FIRECRAWL_API_KEY` | Firecrawl API key for web scraping and search |
-| `SENTRY_AUTH_TOKEN` | Sentry auth token for error lookup tools |
-| `SENTRY_ORG` | Sentry organization slug (required alongside `SENTRY_AUTH_TOKEN`) |
+| Variable                  | Description                                                        |
+| ------------------------- | ------------------------------------------------------------------ |
+| `ATLASSIAN_CLIENT_ID`     | Atlassian OAuth client ID (enables Atlassian sign-in + Jira tools) |
+| `ATLASSIAN_CLIENT_SECRET` | Atlassian OAuth client secret                                      |
+| `ATLASSIAN_CLOUD_ID`      | Bypasses auto-detection of the Jira cloud ID                       |
+| `BETTER_AUTH_URL`         | Base URL for auth redirects (defaults to `localhost:5173`)         |
+| `BETTER_AUTH_SECRET`      | Secret for auth session encryption                                 |
+| `CONTEXT7_API_KEY`        | Context7 SDK key for live documentation lookups                    |
+| `FIRECRAWL_API_KEY`       | Firecrawl API key for web scraping and search                      |
+| `SENTRY_AUTH_TOKEN`       | Sentry auth token for error lookup tools                           |
+| `SENTRY_ORG`              | Sentry organization slug (required alongside `SENTRY_AUTH_TOKEN`)  |
 
 ## Database
 
@@ -62,12 +63,12 @@ pnpm db:migrate
 
 ## Scripts
 
-| Command | Description |
-|---|---|
-| `pnpm dev` | Start dev server |
-| `pnpm build` | Build for production |
-| `pnpm check` | Type-check with svelte-check |
-| `pnpm lint` | Lint with Prettier & ESLint |
-| `pnpm format` | Format with Prettier |
-| `pnpm db:studio` | Open Drizzle Studio |
+| Command            | Description                         |
+| ------------------ | ----------------------------------- |
+| `pnpm dev`         | Start dev server                    |
+| `pnpm build`       | Build for production                |
+| `pnpm check`       | Type-check with svelte-check        |
+| `pnpm lint`        | Lint with Prettier & ESLint         |
+| `pnpm format`      | Format with Prettier                |
+| `pnpm db:studio`   | Open Drizzle Studio                 |
 | `pnpm auth:schema` | Regenerate the auth database schema |

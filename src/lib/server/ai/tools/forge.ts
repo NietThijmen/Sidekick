@@ -28,7 +28,8 @@ function extractJsonApiData(response: unknown): any[] {
 
 async function forgeFetch(userId: string, path: string) {
 	const token = await getForgeToken(userId);
-	if (!token) return { error: 'Laravel Forge API key not configured. Add one in your profile settings.' };
+	if (!token)
+		return { error: 'Laravel Forge API key not configured. Add one in your profile settings.' };
 
 	const response = await fetch(`${FORGE_BASE}${path}`, {
 		headers: {
@@ -48,7 +49,8 @@ async function forgeFetch(userId: string, path: string) {
 
 async function forgePost(userId: string, path: string) {
 	const token = await getForgeToken(userId);
-	if (!token) return { error: 'Laravel Forge API key not configured. Add one in your profile settings.' };
+	if (!token)
+		return { error: 'Laravel Forge API key not configured. Add one in your profile settings.' };
 
 	const response = await fetch(`${FORGE_BASE}${path}`, {
 		method: 'POST',
@@ -132,7 +134,8 @@ export const forgeTools = {
 	} as any),
 
 	listForgeSites: tool({
-		description: 'List sites (projects) for a Laravel Forge organization. Optionally filter by server.',
+		description:
+			'List sites (projects) for a Laravel Forge organization. Optionally filter by server.',
 		inputSchema: z.object({
 			organization: z.string().describe('The organization slug (e.g. "my-org")')
 		}),
