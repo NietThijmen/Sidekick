@@ -50,6 +50,13 @@
       "when": 1784041821299,
       "tag": "0006_graceful_warlock",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1784047650091,
+      "tag": "0007_add_custom_skills",
+      "breakpoints": true
     }
   ]
 }

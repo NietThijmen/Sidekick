@@ -20,7 +20,8 @@
 		Loader2,
 		LogOut,
 		Pencil,
-		Shield
+		Shield,
+		Zap
 	} from '@lucide/svelte';
 
 	interface ProfileFormData {
@@ -119,6 +120,10 @@
 				<Button variant="ghost" size="sm" href={resolve('/profile/agents')} class="gap-2">
 					<Bot class="size-4" />
 					<span class="hidden sm:inline">Agents</span>
+				</Button>
+				<Button variant="ghost" size="sm" href={resolve('/profile/skills')} class="gap-2">
+					<Zap class="size-4" />
+					<span class="hidden sm:inline">Skills</span>
 				</Button>
 				<Button variant="ghost" size="sm" href={resolve('/profile/api-keys')} class="gap-2">
 					<KeyRound class="size-4" />

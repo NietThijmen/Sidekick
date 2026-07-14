@@ -1,5 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { db } from '$lib/server/db';
+import { skill as skillTable } from '$lib/server/db/schema';
+import { eq, and } from 'drizzle-orm';
 
 const AI_DIR = path.resolve('assets/ai');
 const SKILLS_DIR = path.join(AI_DIR, 'skills');
@@ -87,6 +90,35 @@ export function loadSkills(): Skill[] {
 			content: body.trim()
 		};
 	});
+}
+
+export async function loadCustomSkills(userId: string): Promise<Skill[]> {
+	const customSkills = await db
+		.select({
+			id: skillTable.id,
+			name: skillTable.name,
+			description: skillTable.description,
+			triggers: skillTable.triggers,
+			content: skillTable.content
+		})
+		.from(skillTable)
+		.where(and(eq(skillTable.userId, userId), eq(skillTable.enabled, true)));
+
+	return customSkills.map((s) => ({
+		id: `custom:${s.id}`,
+		name: s.name,
+		description: s.description ?? '',
+		triggers: s.triggers,
+		content: s.content
+	}));
+}
+
+export async function loadAllSkills(userId?: string): Promise<Skill[]> {
+	const builtIn = loadSkills();
+	if (!userId) return builtIn;
+
+	const customSkills = await loadCustomSkills(userId);
+	return [...builtIn, ...customSkills];
 }
 
 export function findActiveSkills(message: string, skills: Skill[]): Skill[] {

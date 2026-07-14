@@ -10,6 +10,31 @@ export const task = sqliteTable('task', {
 	priority: integer('priority').notNull().default(1)
 });
 
+export const skill = sqliteTable(
+	'skill',
+	{
+		id: text('id')
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		userId: text('user_id')
+			.notNull()
+			.references(() => user.id, { onDelete: 'cascade' }),
+		name: text('name').notNull(),
+		description: text('description'),
+		triggers: text('triggers', { mode: 'json' }).$type<string[]>().notNull().default([]),
+		content: text('content').notNull().default(''),
+		enabled: integer('enabled', { mode: 'boolean' }).notNull().default(true),
+		createdAt: integer('created_at', { mode: 'timestamp_ms' })
+			.default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+			.notNull(),
+		updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
+			.default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+			.$onUpdate(() => /* @__PURE__ */ new Date())
+			.notNull()
+	},
+	(table) => [index('skill_userId_idx').on(table.userId)]
+);
+
 export const agent = sqliteTable(
 	'agent',
 	{
@@ -90,6 +115,13 @@ export const message = sqliteTable(
 	},
 	(table) => [index('message_chatId_idx').on(table.chatId)]
 );
+
+export const skillRelations = relations(skill, ({ one }) => ({
+	user: one(user, {
+		fields: [skill.userId],
+		references: [user.id]
+	})
+}));
 
 export const agentRelations = relations(agent, ({ one, many }) => ({
 	user: one(user, {

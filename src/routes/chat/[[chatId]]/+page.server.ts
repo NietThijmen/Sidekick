@@ -4,7 +4,7 @@ import { db } from '$lib/server/db';
 import { chat, message, agent } from '$lib/server/db/schema';
 import { desc, eq } from 'drizzle-orm';
 import { listModels } from '$lib/server/ai/models';
-import { findActiveSkills, loadSkills } from '$lib/server/ai';
+import { findActiveSkills, loadAllSkills } from '$lib/server/ai';
 import { z } from 'zod';
 
 const chatIdSchema = z.string().uuid('Invalid chat ID');
@@ -65,7 +65,7 @@ export const load: PageServerLoad = async (event) => {
 	});
 
 	const lastUserMessage = [...messages].reverse().find((m) => m.role === 'user');
-	const allSkills = loadSkills();
+	const allSkills = await loadAllSkills(userId);
 	const activeSkills = lastUserMessage ? findActiveSkills(lastUserMessage.content, allSkills) : [];
 
 	const userAgents = await db.query.agent.findMany({

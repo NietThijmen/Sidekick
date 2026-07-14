@@ -4,7 +4,7 @@ import { getRequestEvent } from '$app/server';
 import { db } from '$lib/server/db';
 import { chat } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
-import { loadSkills } from '$lib/server/ai/skills';
+import { loadAllSkills } from '$lib/server/ai/skills';
 
 export const alwaysAvailableTools = {
 	getCurrentTime: tool({
@@ -19,7 +19,9 @@ export const alwaysAvailableTools = {
 		description: 'List all available skills that can be activated by trigger words',
 		inputSchema: z.object({}).describe('No parameters needed'),
 		execute: async () => {
-			const skills = loadSkills();
+			const event = getRequestEvent();
+			const userId = event.locals.user?.id;
+			const skills = await loadAllSkills(userId);
 			return skills.map((skill) => ({
 				name: skill.name,
 				description: skill.description,
@@ -53,7 +55,9 @@ export const alwaysAvailableTools = {
 			if (!name || typeof name !== 'string') {
 				return { error: 'Missing or invalid skill name' };
 			}
-			const skills = loadSkills();
+			const event = getRequestEvent();
+			const userId = event.locals.user?.id;
+			const skills = await loadAllSkills(userId);
 			const normalized = name.toLowerCase();
 			const skill = skills.find(
 				(s) => s.name.toLowerCase() === normalized || s.id.toLowerCase() === normalized

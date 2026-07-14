@@ -11,6 +11,7 @@ import { sentryTools } from './sentry';
 import { imageGenerationTools } from './image-generation';
 import { videoGenerationTools } from './video-generation';
 import { agentTools } from './generate-agents';
+import { skillTools } from './generate-skills';
 import { env } from '$env/dynamic/private';
 
 export function sanitizeToolOutput<T>(value: T): T {
@@ -66,6 +67,7 @@ export async function getToolsForUser(userId: string) {
 		...sanitizeTools(imageGenerationTools),
 		...sanitizeTools(videoGenerationTools),
 		...sanitizeTools(agentTools),
+		...sanitizeTools(skillTools),
 		...(context7Key ? sanitizeTools(context7Tools) : {}),
 		...(providerIds.includes('github') ? sanitizeTools(gitHubTools) : {}),
 		...(providerIds.includes('atlassian') ? sanitizeTools(jiraTools) : {}),

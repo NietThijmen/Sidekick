@@ -304,7 +304,11 @@
 		</div>
 	</header>
 
-	<PaneGroup direction="horizontal" autoSaveId="chat-sidebar" class="relative flex-1 overflow-hidden">
+	<PaneGroup
+		direction="horizontal"
+		autoSaveId="chat-sidebar"
+		class="relative flex-1 overflow-hidden"
+	>
 		<!-- Sidebar Pane -->
 		<Pane
 			defaultSize={20}
@@ -369,8 +373,8 @@
 												</span>
 												{#if chatItem.agent}
 													<span
-														class="ml-auto truncate text-[10px] opacity-60 {data.currentChat
-															.id === chatItem.id
+														class="ml-auto truncate text-[10px] opacity-60 {data.currentChat.id ===
+														chatItem.id
 															? 'text-primary-foreground'
 															: 'text-muted-foreground'}"
 													>
@@ -409,8 +413,8 @@
 												type="button"
 												variant="ghost"
 												size="icon-xs"
-												class="size-7 opacity-0 group-hover:opacity-100 {data.currentChat
-													.id === chatItem.id
+												class="size-7 opacity-0 group-hover:opacity-100 {data.currentChat.id ===
+												chatItem.id
 													? 'hover:bg-primary-foreground/20'
 													: 'hover:bg-muted'}"
 												onclick={() => (chatToDelete = chatItem.id)}
@@ -463,8 +467,8 @@
 								>
 									<CardContent class="flex gap-3 p-3">
 										<div
-											class="flex size-8 shrink-0 items-center justify-center rounded-full {message
-												.role === 'user'
+											class="flex size-8 shrink-0 items-center justify-center rounded-full {message.role ===
+											'user'
 												? 'bg-primary-foreground/20 text-primary-foreground'
 												: 'bg-background text-foreground'}"
 										>
@@ -499,15 +503,12 @@
 														class="flex cursor-pointer list-none items-center gap-1 text-xs font-medium opacity-80"
 													>
 														{#if message.reasoning}
-															<span
-																>Reasoning{message.toolCalls?.length ? ' + ' : ''}</span
-															>
+															<span>Reasoning{message.toolCalls?.length ? ' + ' : ''}</span>
 														{/if}
 														{#if message.toolCalls?.length}
 															<Wrench class="size-3" />
 															<span
-																>{message.toolCalls.length} tool call{message.toolCalls
-																	.length === 1
+																>{message.toolCalls.length} tool call{message.toolCalls.length === 1
 																	? ''
 																	: 's'}</span
 															>
@@ -575,9 +576,7 @@
 										{#if streamingContent}
 											<MarkdownRenderer content={streamingContent} class="text-foreground" />
 											{#if isLoading}
-												<span
-													class="inline-flex items-center gap-1 text-xs text-muted-foreground"
-												>
+												<span class="inline-flex items-center gap-1 text-xs text-muted-foreground">
 													<Loader2 class="size-3 animate-spin" />
 													Thinking...
 												</span>

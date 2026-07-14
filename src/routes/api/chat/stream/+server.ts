@@ -14,7 +14,7 @@ import {
 	buildSystemPrompt,
 	findActiveSkills,
 	getToolsForUser,
-	loadSkills,
+	loadAllSkills,
 	loadSystemPrompt
 } from '$lib/server/ai';
 import { calculateCost } from '$lib/server/ai/models';
@@ -92,7 +92,7 @@ export const POST: RequestHandler = async (event) => {
 		}));
 
 	const baseSystemPrompt = loadSystemPrompt();
-	const skills = loadSkills();
+	const skills = await loadAllSkills(userId);
 	const activeSkills = findActiveSkills(content, skills);
 
 	let systemPrompt = buildSystemPrompt(baseSystemPrompt, activeSkills);
