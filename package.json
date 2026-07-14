@@ -23,7 +23,7 @@
 		"@eslint/js": "^10.0.1",
 		"@fontsource-variable/inter": "^5.2.8",
 		"@internationalized/date": "^3.12.2",
-		"@libsql/client": "^0.17.3",
+
 		"@lucide/svelte": "^1.24.0",
 		"@sveltejs/adapter-node": "^5.5.4",
 		"@sveltejs/kit": "^2.63.0",
@@ -57,6 +57,7 @@
 		"vite": "^8.0.16"
 	},
 	"dependencies": {
+		"@libsql/client": "^0.17.3",
 		"@opencode-ai/models": "^0.0.11",
 		"@openrouter/ai-sdk-provider": "^3.0.0",
 		"@upstash/context7-sdk": "^0.3.1",

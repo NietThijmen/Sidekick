@@ -6,6 +6,9 @@ import adapter from '@sveltejs/adapter-node';
 import { sveltekit } from '@sveltejs/kit/vite';
 
 export default defineConfig({
+	ssr: {
+		external: ['@libsql/client']
+	},
 	plugins: [
 		tailwindcss(),
 		sveltekit({
