@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
 	import { invalidateAll, goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { Button } from '$lib/components/ui/button';
@@ -22,8 +21,9 @@
 		Sparkles
 	} from '@lucide/svelte';
 	import { onMount, tick } from 'svelte';
+	import { SvelteURLSearchParams } from 'svelte/reactivity';
 
-	let { data, form } = $props();
+	let { data } = $props();
 
 	let inputValue = $state('');
 	let isLoading = $state(false);
@@ -31,21 +31,96 @@
 	let messagesContainer: HTMLDivElement | undefined = $state();
 	let inputRef: HTMLInputElement | null = $state(null);
 	let chatToDelete: string | null = $state(null);
-	let currentAgent = $derived(
-		data.currentChat.agent ?? null
-	);
+	let optimisticMessages = $state<
+		Array<{
+			id: string;
+			chatId: string;
+			role: 'user';
+			content: string;
+			createdAt: Date;
+			toolCalls: null;
+			usage: null;
+		}>
+	>([]);
+	let streamingContent = $state('');
+	let streamingMessageId = $state<string | null>(null);
+	let submitError = $state('');
 
-	let effectiveModel = $derived(
-		currentAgent?.model ?? data.currentChat.model
-	);
+	let messages = $derived([...data.messages, ...optimisticMessages]);
+	let currentAgent = $derived(data.currentChat.agent ?? null);
 
-	let effectiveModelInfo = $derived(
-		data.models.find((m) => m.id === effectiveModel)
-	);
+	let effectiveModel = $derived(currentAgent?.model ?? data.currentChat.model);
+
+	let effectiveModelInfo = $derived(data.models.find((m) => m.id === effectiveModel));
 
 	function scrollToBottom() {
 		if (messagesContainer) {
 			messagesContainer.scrollTop = messagesContainer.scrollHeight;
+		}
+	}
+
+	async function handleSubmit(e: SubmitEvent) {
+		e.preventDefault();
+		const content = inputValue.trim();
+		if (!content || isLoading) return;
+
+		inputValue = '';
+		isLoading = true;
+		submitError = '';
+
+		const userMessage = {
+			id: crypto.randomUUID(),
+			chatId: data.currentChat.id,
+			role: 'user' as const,
+			content,
+			createdAt: new Date(),
+			toolCalls: null,
+			usage: null
+		};
+		optimisticMessages = [...optimisticMessages, userMessage];
+		tick().then(scrollToBottom);
+
+		try {
+			const response = await fetch('/api/chat/stream', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ chatId: data.currentChat.id, content })
+			});
+
+			if (!response.ok) {
+				const text = await response.text();
+				throw new Error(text || 'Failed to send message');
+			}
+
+			streamingMessageId = crypto.randomUUID();
+			streamingContent = '';
+
+			const reader = response.body?.getReader();
+			if (!reader) {
+				throw new Error('No response body');
+			}
+
+			const decoder = new TextDecoder();
+			while (true) {
+				const { done, value } = await reader.read();
+				if (done) break;
+				streamingContent += decoder.decode(value, { stream: true });
+				tick().then(scrollToBottom);
+			}
+		} catch (err) {
+			submitError = err instanceof Error ? err.message : 'Failed to send message';
+			inputValue = content;
+			optimisticMessages = optimisticMessages.filter((m) => m.id !== userMessage.id);
+		} finally {
+			streamingMessageId = null;
+			streamingContent = '';
+			isLoading = false;
+			await invalidateAll();
+			optimisticMessages = [];
+			tick().then(() => {
+				scrollToBottom();
+				inputRef?.focus();
+			});
 		}
 	}
 
@@ -77,7 +152,7 @@
 		await fetch('?/setModel', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-			body: new URLSearchParams({ chatId: data.currentChat.id, model: modelId })
+			body: new SvelteURLSearchParams({ chatId: data.currentChat.id, model: modelId })
 		});
 		await invalidateAll();
 	}
@@ -86,7 +161,7 @@
 		await fetch('?/setAgent', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-			body: new URLSearchParams({
+			body: new SvelteURLSearchParams({
 				chatId: data.currentChat.id,
 				agentId
 			})
@@ -98,7 +173,7 @@
 		await fetch('?/setAgent', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-			body: new URLSearchParams({
+			body: new SvelteURLSearchParams({
 				chatId: data.currentChat.id,
 				agentId: ''
 			})
@@ -108,7 +183,7 @@
 
 	async function createNewChatWithAgent(agentId: string) {
 		isSidebarOpen = false;
-		const formData = new URLSearchParams();
+		const formData = new SvelteURLSearchParams();
 		formData.set('title', 'New chat');
 		if (agentId) {
 			formData.set('agentId', agentId);
@@ -138,11 +213,10 @@
 	});
 
 	$effect(() => {
-		if (data.messages.length >= 0) {
+		if (messages.length >= 0) {
 			tick().then(scrollToBottom);
 		}
 	});
-
 </script>
 
 <svelte:head>
@@ -267,7 +341,8 @@
 											</span>
 											{#if chatItem.agent}
 												<span
-													class="ml-auto truncate text-[10px] opacity-60 {data.currentChat.id === chatItem.id
+													class="ml-auto truncate text-[10px] opacity-60 {data.currentChat.id ===
+													chatItem.id
 														? 'text-primary-foreground'
 														: 'text-muted-foreground'}"
 												>
@@ -338,7 +413,7 @@
 		<!-- Main chat area -->
 		<main class="flex flex-1 flex-col overflow-hidden">
 			<div bind:this={messagesContainer} class="flex flex-1 flex-col gap-4 overflow-y-auto p-4">
-				{#if data.messages.length === 0}
+				{#if messages.length === 0 && !streamingMessageId}
 					<div class="flex flex-1 flex-col items-center justify-center text-center">
 						<Bot class="mb-4 size-12 text-muted-foreground" />
 						<h2 class="text-xl font-semibold">How can I help you today?</h2>
@@ -347,7 +422,7 @@
 						</p>
 					</div>
 				{:else}
-					{#each data.messages as message (message.id)}
+					{#each messages as message (message.id)}
 						<div class="flex w-full" class:justify-end={message.role === 'user'}>
 							<Card
 								class="max-w-[85%] sm:max-w-[75%] {message.role === 'user'
@@ -424,17 +499,24 @@
 						</div>
 					{/each}
 				{/if}
-				{#if isLoading}
+				{#if streamingMessageId}
 					<div class="flex w-full justify-start">
 						<Card class="max-w-[85%] bg-muted sm:max-w-[75%]">
-							<CardContent class="flex items-center gap-3 p-3">
+							<CardContent class="flex gap-3 p-3">
 								<div
 									class="flex size-8 shrink-0 items-center justify-center rounded-full bg-background text-foreground"
 								>
 									<LabLogo lab={effectiveModelInfo?.lab ?? ''} class="size-4" />
 								</div>
-								<Loader2 class="size-4 animate-spin" />
-								<span class="text-sm text-muted-foreground">Thinking... tools may be used</span>
+								<div class="min-w-0 space-y-1">
+									<MarkdownRenderer content={streamingContent} class="text-foreground" />
+									{#if isLoading}
+										<span class="inline-flex items-center gap-1 text-xs text-muted-foreground">
+											<Loader2 class="size-3 animate-spin" />
+											Thinking...
+										</span>
+									{/if}
+								</div>
 							</CardContent>
 						</Card>
 					</div>
@@ -455,29 +537,7 @@
 					</div>
 				{/if}
 
-				<form
-					method="post"
-					action="?/sendMessage"
-					use:enhance={() => {
-						isLoading = true;
-						const userMessage = inputValue;
-						inputValue = '';
-						return async ({ result, update }) => {
-							if (result.type === 'failure') {
-								inputValue = userMessage;
-							}
-							await invalidateAll();
-							await update();
-							isLoading = false;
-							tick().then(() => {
-								scrollToBottom();
-								inputRef?.focus();
-							});
-						};
-					}}
-					class="flex items-end gap-2"
-				>
-					<input type="hidden" name="chatId" value={data.currentChat.id} />
+				<form onsubmit={handleSubmit} class="flex items-end gap-2">
 					<Input
 						bind:ref={inputRef}
 						name="content"
@@ -501,8 +561,8 @@
 						{/if}
 					</Button>
 				</form>
-				{#if form?.error}
-					<p class="mt-2 text-sm text-destructive">{form.error}</p>
+				{#if submitError}
+					<p class="mt-2 text-sm text-destructive">{submitError}</p>
 				{/if}
 			</div>
 		</main>

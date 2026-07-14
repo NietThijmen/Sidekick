@@ -1,0 +1,192 @@
+import { error } from '@sveltejs/kit';
+import type { RequestHandler } from './$types';
+import { db } from '$lib/server/db';
+import { chat, message } from '$lib/server/db/schema';
+import { eq } from 'drizzle-orm';
+import {
+	streamText,
+	toTextStream,
+	createTextStreamResponse,
+	openrouter,
+	isStepCount,
+	modelMessageSchema,
+	type ModelMessage
+} from '$lib/server/ai';
+import {
+	buildSystemPrompt,
+	findActiveSkills,
+	getToolsForUser,
+	loadSkills,
+	loadSystemPrompt
+} from '$lib/server/ai';
+import { calculateCost } from '$lib/server/ai/models';
+import { z } from 'zod';
+
+const sendMessageSchema = z.object({
+	chatId: z.string().uuid('Invalid chat ID'),
+	content: z.string().min(1, 'Message cannot be empty').max(4000, 'Message is too long')
+});
+
+const MAX_STEPS = 20;
+
+export const POST: RequestHandler = async (event) => {
+	if (!event.locals.user) {
+		return error(401, 'Unauthorized');
+	}
+
+	const userId = event.locals.user.id;
+
+	let body: unknown;
+	try {
+		body = await event.request.json();
+	} catch {
+		return error(400, 'Invalid JSON');
+	}
+
+	const parsed = sendMessageSchema.safeParse(body);
+	if (!parsed.success) {
+		return error(400, parsed.error.issues[0]?.message ?? 'Invalid request');
+	}
+
+	const { chatId, content } = parsed.data;
+
+	const currentChat = await db.query.chat.findFirst({
+		where: eq(chat.id, chatId),
+		with: {
+			agent: {
+				columns: {
+					id: true,
+					name: true,
+					systemPrompt: true,
+					model: true
+				}
+			}
+		}
+	});
+
+	if (!currentChat || currentChat.userId !== userId) {
+		return error(403, 'Chat not found');
+	}
+
+	if (currentChat.title === 'New chat') {
+		await db
+			.update(chat)
+			.set({ title: content.slice(0, 50) })
+			.where(eq(chat.id, chatId));
+	}
+
+	await db.insert(message).values({
+		chatId,
+		role: 'user',
+		content
+	});
+
+	const previousMessages = await db.query.message.findMany({
+		where: eq(message.chatId, chatId),
+		orderBy: [message.createdAt]
+	});
+
+	const chatMessages = previousMessages
+		.filter((m) => m.role !== 'system')
+		.map((m) => ({
+			role: m.role as 'user' | 'assistant',
+			content: m.content
+		}));
+
+	const baseSystemPrompt = loadSystemPrompt();
+	const skills = loadSkills();
+	const activeSkills = findActiveSkills(content, skills);
+
+	let systemPrompt = buildSystemPrompt(baseSystemPrompt, activeSkills);
+
+	if (currentChat.agent?.systemPrompt) {
+		systemPrompt += `\n\n## Agent: ${currentChat.agent.name}\n\n${currentChat.agent.systemPrompt}`;
+	}
+
+	systemPrompt += `\n\n## Context\n\nCurrent chat ID: ${chatId}`;
+
+	const modelId = currentChat.agent?.model || currentChat.model;
+
+	async function saveErrorMessage(err: unknown) {
+		let messageText = err instanceof Error ? err.message : 'Failed to generate response';
+		if (err instanceof Error && err.cause instanceof Error) {
+			messageText += ` (${err.cause.message})`;
+		}
+		await db.insert(message).values({
+			chatId,
+			role: 'assistant',
+			content: `Sorry, I encountered an error: ${messageText}`
+		});
+		await db.update(chat).set({ updatedAt: new Date() }).where(eq(chat.id, chatId));
+	}
+
+	try {
+		const tools = await getToolsForUser(userId);
+
+		const validationResult = modelMessageSchema.array().safeParse(chatMessages);
+		if (!validationResult.success) {
+			console.error('Invalid messages:', chatMessages, validationResult.error);
+			return error(400, `Invalid messages: ${validationResult.error.message}`);
+		}
+
+		const result = streamText({
+			model: openrouter(modelId),
+			messages: chatMessages as ModelMessage[],
+			system: systemPrompt,
+			tools,
+			stopWhen: isStepCount(MAX_STEPS),
+			onEnd: async ({ text, toolCalls, toolResults, usage }) => {
+				const storedToolCalls: Array<{
+					id: string;
+					type: 'tool-call';
+					toolName: string;
+					args: Record<string, unknown>;
+					result?: unknown;
+				}> = [];
+
+				for (let i = 0; i < toolCalls.length; i++) {
+					const toolCall = toolCalls[i];
+					const toolResult = toolResults.find((r) => r?.toolCallId === toolCall?.toolCallId);
+					if (toolCall) {
+						storedToolCalls.push({
+							id: toolCall.toolCallId,
+							type: 'tool-call',
+							toolName: toolCall.toolName,
+							args: toolCall.input as Record<string, unknown>,
+							result: toolResult?.output
+						});
+					}
+				}
+
+				const inputTokens = usage?.inputTokens ?? 0;
+				const outputTokens = usage?.outputTokens ?? 0;
+				const totalCost = calculateCost(modelId, inputTokens, outputTokens);
+
+				await db.insert(message).values({
+					chatId,
+					role: 'assistant',
+					content: text,
+					toolCalls: storedToolCalls.length > 0 ? storedToolCalls : undefined,
+					usage: {
+						promptTokens: inputTokens,
+						completionTokens: outputTokens,
+						totalTokens: usage?.totalTokens ?? 0,
+						totalCost
+					}
+				});
+
+				await db.update(chat).set({ updatedAt: new Date() }).where(eq(chat.id, chatId));
+			},
+			onError: async ({ error: streamError }) => {
+				await saveErrorMessage(streamError);
+			}
+		});
+
+		return createTextStreamResponse({
+			stream: toTextStream({ stream: result.stream })
+		});
+	} catch (err) {
+		await saveErrorMessage(err);
+		return error(500, err instanceof Error ? err.message : 'Failed to generate response');
+	}
+};
