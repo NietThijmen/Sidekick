@@ -65,7 +65,8 @@ Use this tool when the user asks to create, generate, draw, or imagine an image.
 					'black-forest-labs/flux-1.1-pro',
 					'black-forest-labs/flux-dev',
 					'black-forest-labs/flux-schnell',
-					'google/imagen-4.0-generate-001'
+					'google/imagen-4.0-generate-001',
+					'bytedance-seed/seedream-4.5'
 				])
 				.default('openai/gpt-image-1')
 				.optional()
