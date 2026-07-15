@@ -8,6 +8,7 @@ import { forgeTools } from './forge';
 import { context7Tools } from './context7';
 import { firecrawlTools } from './firecrawl';
 import { sentryTools } from './sentry';
+import { nslookupTools } from './nslookup';
 import { imageGenerationTools } from './image-generation';
 import { videoGenerationTools } from './video-generation';
 import { agentTools } from './generate-agents';
@@ -68,6 +69,7 @@ export async function getToolsForUser(userId: string) {
 		...sanitizeTools(videoGenerationTools),
 		...sanitizeTools(agentTools),
 		...sanitizeTools(skillTools),
+		...sanitizeTools(nslookupTools),
 		...(context7Key ? sanitizeTools(context7Tools) : {}),
 		...(providerIds.includes('github') ? sanitizeTools(gitHubTools) : {}),
 		...(providerIds.includes('atlassian') ? sanitizeTools(jiraTools) : {}),

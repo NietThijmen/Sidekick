@@ -103,7 +103,7 @@ export const message = sqliteTable(
 				result?: unknown;
 			}>
 		>(),
-	 usage: text('usage', { mode: 'json' }).$type<{
+		usage: text('usage', { mode: 'json' }).$type<{
 			promptTokens: number;
 			completionTokens: number;
 			totalTokens: number;
