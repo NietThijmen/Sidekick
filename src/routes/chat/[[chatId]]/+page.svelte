@@ -2,7 +2,7 @@
 	import { invalidateAll, goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { Button } from '$lib/components/ui/button';
-	import { Input } from '$lib/components/ui/input';
+	import { Textarea } from '$lib/components/ui/textarea';
 	import { Card, CardContent } from '$lib/components/ui/card';
 	import MarkdownRenderer from '$lib/components/MarkdownRenderer.svelte';
 	import ModelSelector from '$lib/components/ModelSelector.svelte';
@@ -30,7 +30,7 @@
 	let isLoading = $state(false);
 	let isSidebarOpen = $state(false);
 	let messagesContainer: HTMLDivElement | undefined = $state();
-	let inputRef: HTMLInputElement | null = $state(null);
+	let inputRef: HTMLTextAreaElement | null = $state(null);
 	let chatToDelete: string | null = $state(null);
 	let optimisticMessages = $state<
 		Array<{
@@ -526,14 +526,10 @@
 																	<span>${message.usage.totalCost.toFixed(5)}</span>
 																{/if}
 																{#if message.usage.durationMs}
-																	<span
-																		>{(message.usage.durationMs / 1000).toFixed(1)}s</span
-																	>
+																	<span>{(message.usage.durationMs / 1000).toFixed(1)}s</span>
 																{/if}
 																{#if message.usage.tokensPerSecond}
-																	<span
-																		>{message.usage.tokensPerSecond.toFixed(0)} tok/s</span
-																	>
+																	<span>{message.usage.tokensPerSecond.toFixed(0)} tok/s</span>
 																{/if}
 															</span>
 														{/if}
@@ -636,14 +632,13 @@
 					{/if}
 
 					<form onsubmit={handleSubmit} class="flex items-end gap-2">
-						<Input
+						<Textarea
 							bind:ref={inputRef}
 							name="content"
 							placeholder="Type your message..."
 							bind:value={inputValue}
 							disabled={isLoading}
-							class="min-h-[44px] flex-1 resize-none"
-							autocomplete="off"
+							class="min-h-[44px] flex-1"
 							onkeydown={(e) => {
 								if (e.key === 'Enter' && !e.shiftKey) {
 									e.preventDefault();
