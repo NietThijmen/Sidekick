@@ -1,0 +1,20 @@
+services:
+  app:
+    build: .
+    ports:
+      - '3000:3000'
+    env_file:
+      - .env
+    environment:
+      - ORIGIN=http://localhost:3000
+      - DATABASE_URL=file:/data/local.db
+    volumes:
+      - app-data:/data
+      - generated-images:/app/static/generated-images
+      - generated-videos:/app/static/generated-videos
+    restart: unless-stopped
+
+volumes:
+  app-data:
+  generated-images:
+  generated-videos:

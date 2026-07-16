@@ -30,6 +30,9 @@ COPY --from=build /app/build ./build
 COPY --from=build /app/package.json ./
 COPY --from=build /app/static ./static
 
+RUN mkdir -p static/generated-images static/generated-videos && \
+    chown -R sveltekit:nodejs static
+
 USER sveltekit
 EXPOSE 3000
 CMD ["node", "build/index.js"]
