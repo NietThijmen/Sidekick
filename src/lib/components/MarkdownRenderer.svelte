@@ -18,7 +18,7 @@
 	let container: HTMLDivElement;
 
 	$effect(() => {
-		rendered;
+		void rendered;
 		if (!container) return;
 		const buttons = container.querySelectorAll<HTMLButtonElement>('[data-copy-code]');
 		buttons.forEach((btn) => {
@@ -31,7 +31,9 @@
 					setTimeout(() => {
 						btn.innerHTML = copyIcon;
 					}, 2000);
-				} catch {}
+				} catch {
+					/* clipboard write failed, silently ignore */
+				}
 			});
 		});
 	});

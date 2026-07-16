@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { Sparkles, X, ChevronDown } from '@lucide/svelte';
-	import { cn } from '$lib/utils.js';
 	import { resolve } from '$app/paths';
 
 	interface Agent {

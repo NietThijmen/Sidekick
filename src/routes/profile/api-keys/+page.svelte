@@ -36,7 +36,6 @@
 	interface ApiKeysFormData {
 		error?: string;
 		errors?: Record<string, string[]>;
-		success?: boolean;
 	}
 
 	let {

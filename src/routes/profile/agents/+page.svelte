@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { resolve } from '$app/paths';
-	import { invalidateAll } from '$app/navigation';
 	import { Button } from '$lib/components/ui/button';
 	import {
 		Card,
@@ -25,7 +24,6 @@
 
 	interface AgentFormData {
 		error?: string;
-		errors?: Record<string, string[]>;
 		success?: boolean;
 	}
 

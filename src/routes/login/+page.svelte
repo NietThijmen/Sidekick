@@ -40,9 +40,7 @@
 		<CardHeader class="text-center">
 			<CardTitle class="text-xl">Welcome back</CardTitle>
 			<CardDescription
-				>Login with your email{data.atlassianConfigured
-					? ', GitHub or Atlassian'
-					: ' or GitHub'}{' '}
+				>Login with your email{data.atlassianConfigured ? ', GitHub or Atlassian' : ' or GitHub'}
 				account</CardDescription
 			>
 		</CardHeader>
